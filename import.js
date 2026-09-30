@@ -38,7 +38,7 @@ async function ensureWard(wardNumber) {
 
 async function uploadPhoto(imageBlob, filename) {
   const path = `voter-photos/${filename}`;
-  const { error } = await supabase.storage
+  const { error } = await sb.storage
     .from('voters')
     .upload(path, imageBlob, { upsert: true, contentType: 'image/png' });
   if (error) throw error;
@@ -97,7 +97,7 @@ importBtn.addEventListener('click', async () => {
         }
       }
 
-      const { error } = await supabase.from('voters').upsert({
+      const { error } = await sb.from('voters').upsert({
         ward_id: wardId,
         serial_number: serialNumber,
         epic_number: voterId,
