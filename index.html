@@ -39,16 +39,26 @@
     </header>
 
     <main>
+      <section id="import-card" class="card import-card">
+        <h2>Import ward data</h2>
+        <p class="lede">Upload a ward's extracted Excel file (with photos) to load it into the shared database. Safe to re-run — existing voters are updated, not duplicated.</p>
+        <input type="file" id="import-file" accept=".xlsx">
+        <button id="import-btn">Import</button>
+        <div id="import-progress" role="status"></div>
+      </section>
+
       <p class="placeholder">
-        You're signed in — the app shell, PWA install, and login are working
-        end to end. Voter search, visit logging, and the ward dashboard land
-        in the next build, once ward data is loaded into Supabase.
+        Voter search, visit logging, and the ward dashboard land in the next
+        build, once at least one ward is imported above.
       </p>
     </main>
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="app.js"></script>
+  <script src="import.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
