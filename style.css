@@ -137,3 +137,43 @@ main { padding: 32px 24px; max-width: 640px; }
   color: #4A4D53;
   line-height: 1.6;
 }
+
+.import-card {
+  max-width: none;
+  margin-bottom: 28px;
+  padding: 28px;
+}
+
+.import-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  color: var(--indigo);
+}
+
+.import-card input[type="file"] {
+  display: block;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+
+.import-card button {
+  background: var(--indigo);
+  color: #fff;
+}
+
+.import-card button:hover { background: var(--indigo-light); }
+
+.import-card button:disabled {
+  background: #B7BAC2;
+  cursor: not-allowed;
+}
+
+#import-progress {
+  margin-top: 14px;
+  font-size: 0.9rem;
+  color: #4A4D53;
+  white-space: pre-line;
+}
+
+#import-progress.error { color: var(--error); }
+#import-progress.success { color: #2F6B3A; }
