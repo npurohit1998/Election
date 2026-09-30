@@ -1,7 +1,7 @@
 // ====== CONFIGURE THIS BEFORE DEPLOYING ======
 // Supabase dashboard → your project → Settings → API
-const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_PUBLIC_KEY';
+const SUPABASE_URL = 'https://vgtkzghgkxfgqfdkcgid.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_POoKwht72UIlidvQlnWSEg_DUq2XkDr';
 // The "anon" / "public" key is meant to be visible in client-side code like
 // this — Supabase's security lives in Row Level Security policies on the
 // database, not in hiding this key. Never put the "service_role" key here.
