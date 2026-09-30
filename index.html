@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>लोर्डिया वार्ड 6 — Campaign Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1E2A4A">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <section id="login-view" class="view">
+    <div class="card">
+      <h1>लोर्डिया वार्ड 6</h1>
+      <p class="lede">Campaign tracker — family access only</p>
+
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input type="email" id="email" required autocomplete="email">
+
+        <label for="password">Password</label>
+        <input type="password" id="password" required autocomplete="current-password">
+
+        <button type="submit">Sign in</button>
+      </form>
+
+      <p id="login-status" role="status"></p>
+    </div>
+  </section>
+
+  <section id="app-view" class="view" hidden>
+    <header>
+      <h1>लोर्डिया वार्ड 6</h1>
+      <div class="who">
+        <span id="user-name"></span>
+        <button id="signout-btn" class="ghost">Sign out</button>
+      </div>
+    </header>
+
+    <main>
+      <p class="placeholder">
+        You're signed in — the app shell, PWA install, and login are working
+        end to end. Voter search, visit logging, and the ward dashboard land
+        in the next build, once ward data is loaded into Supabase.
+      </p>
+    </main>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+    }
+  </script>
+</body>
+</html>

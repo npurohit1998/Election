@@ -1,0 +1,61 @@
+// ====== CONFIGURE THIS BEFORE DEPLOYING ======
+// Supabase dashboard → your project → Settings → API
+const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_PUBLIC_KEY';
+// The "anon" / "public" key is meant to be visible in client-side code like
+// this — Supabase's security lives in Row Level Security policies on the
+// database, not in hiding this key. Never put the "service_role" key here.
+// ==============================================
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const loginView = document.getElementById('login-view');
+const appView = document.getElementById('app-view');
+const loginForm = document.getElementById('login-form');
+const loginStatus = document.getElementById('login-status');
+const userNameEl = document.getElementById('user-name');
+const signoutBtn = document.getElementById('signout-btn');
+
+function showApp(user) {
+  loginView.hidden = true;
+  appView.hidden = false;
+  userNameEl.textContent = user.email;
+}
+
+function showLogin() {
+  appView.hidden = true;
+  loginView.hidden = false;
+}
+
+// Restore session on page load / PWA relaunch, so people aren't logged out
+// every time they reopen the app between doors.
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session) showApp(session.user);
+});
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (session) showApp(session.user);
+  else showLogin();
+});
+
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  loginStatus.textContent = 'Signing in…';
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    loginStatus.textContent = error.message;
+  } else {
+    loginStatus.textContent = '';
+    showApp(data.user);
+  }
+});
+
+signoutBtn.addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  showLogin();
+});

@@ -1,0 +1,139 @@
+:root {
+  --indigo: #1E2A4A;
+  --indigo-light: #2E3D63;
+  --ink: #22252B;
+  --paper: #FAF9F6;
+  --gold: #B08D57;
+  --line: #DEDAD1;
+  --error: #B3423C;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Devanagari",
+               "Nirmala UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+.view { min-height: 100vh; }
+
+/* ---- Login ---- */
+#login-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 360px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 40px 32px;
+}
+
+.card h1 {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--indigo);
+}
+
+.lede {
+  margin: 0 0 28px;
+  color: #6B6F76;
+  font-size: 0.95rem;
+}
+
+form { display: flex; flex-direction: column; }
+
+label {
+  font-size: 0.85rem;
+  color: #4A4D53;
+  margin-bottom: 6px;
+}
+
+input {
+  padding: 11px 12px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 1rem;
+  background: var(--paper);
+}
+
+input:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+  border-color: var(--gold);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 3px;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px;
+}
+
+form button[type="submit"] {
+  background: var(--gold);
+  color: #fff;
+}
+
+form button[type="submit"]:hover { background: #9a7a4a; }
+
+#login-status {
+  min-height: 1.2em;
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  color: var(--error);
+}
+
+/* ---- App shell ---- */
+#app-view header {
+  background: var(--indigo);
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#app-view header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.9rem;
+}
+
+button.ghost {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+button.ghost:hover { background: rgba(255,255,255,0.1); }
+
+main { padding: 32px 24px; max-width: 640px; }
+
+.placeholder {
+  color: #4A4D53;
+  line-height: 1.6;
+}
