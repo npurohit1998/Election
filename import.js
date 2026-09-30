@@ -18,7 +18,7 @@ function setProgress(text, kind) {
 }
 
 async function ensureWard(wardNumber) {
-  const { data: existing } = await supabase
+  const { data: existing } = await sb
     .from('wards')
     .select('ward_id')
     .eq('ward_number', wardNumber)
@@ -26,7 +26,7 @@ async function ensureWard(wardNumber) {
 
   if (existing) return existing.ward_id;
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from('wards')
     .insert({ ward_number: wardNumber, gram_panchayat: 'लोर्डिया' })
     .select('ward_id')
