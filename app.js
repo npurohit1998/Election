@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_POoKwht72UIlidvQlnWSEg_DUq2XkDr';
 // database, not in hiding this key. Never put the "service_role" key here.
 // ==============================================
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const loginView = document.getElementById('login-view');
 const appView = document.getElementById('app-view');
@@ -29,11 +29,11 @@ function showLogin() {
 
 // Restore session on page load / PWA relaunch, so people aren't logged out
 // every time they reopen the app between doors.
-supabase.auth.getSession().then(({ data: { session } }) => {
+sb.auth.getSession().then(({ data: { session } }) => {
   if (session) showApp(session.user);
 });
 
-supabase.auth.onAuthStateChange((_event, session) => {
+sb.auth.onAuthStateChange((_event, session) => {
   if (session) showApp(session.user);
   else showLogin();
 });
@@ -45,7 +45,7 @@ loginForm.addEventListener('submit', async (event) => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
   if (error) {
     loginStatus.textContent = error.message;
@@ -56,6 +56,6 @@ loginForm.addEventListener('submit', async (event) => {
 });
 
 signoutBtn.addEventListener('click', async () => {
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   showLogin();
 });
