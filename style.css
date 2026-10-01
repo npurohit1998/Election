@@ -131,16 +131,37 @@ button.ghost {
 
 button.ghost:hover { background: rgba(255,255,255,0.1); }
 
-main { padding: 32px 24px; max-width: 640px; }
+main { padding: 20px 16px 32px; max-width: 640px; }
 
 .placeholder {
   color: #4A4D53;
   line-height: 1.6;
 }
 
+/* ---- Tabs ---- */
+.tabs {
+  display: flex;
+  background: var(--indigo-light);
+  padding: 0 16px;
+}
+
+.tab-btn {
+  background: transparent;
+  color: rgba(255,255,255,0.65);
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.tab-btn.active {
+  color: #fff;
+  border-bottom-color: var(--gold);
+}
+
 .import-card {
   max-width: none;
-  margin-bottom: 28px;
   padding: 28px;
 }
 
@@ -179,13 +200,7 @@ main { padding: 32px 24px; max-width: 640px; }
 #import-progress.success { color: #2F6B3A; }
 
 /* ---- Voter search & list ---- */
-.voters-card { max-width: none; padding: 28px; }
-
-.voters-card h2 {
-  margin: 0 0 16px;
-  font-size: 1.15rem;
-  color: var(--indigo);
-}
+.voters-card { max-width: none; padding: 0; }
 
 .search-row {
   display: flex;
@@ -193,21 +208,30 @@ main { padding: 32px 24px; max-width: 640px; }
   margin-bottom: 14px;
 }
 
+.search-row {
+  flex-wrap: wrap;
+}
+
 .search-row input[type="search"] {
-  flex: 1;
-  padding: 10px 12px;
+  flex: 1 1 100%;
+  padding: 12px;
   border: 1px solid var(--line);
   border-radius: 3px;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .search-row select {
+  flex: 1 1 100%;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 3px;
   font-size: 0.9rem;
   background: #fff;
-  max-width: 200px;
+}
+
+@media (min-width: 480px) {
+  .search-row input[type="search"] { flex: 1 1 auto; }
+  .search-row select { flex: 0 0 auto; max-width: 200px; }
 }
 
 .voter-count {
