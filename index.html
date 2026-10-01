@@ -38,23 +38,27 @@
       </div>
     </header>
 
-    <main>
-      <section id="import-card" class="card import-card">
-        <h2>Import ward data</h2>
-        <p class="lede">Upload a ward's extracted Excel file (with photos) to load it into the shared database. Safe to re-run — existing voters are updated, not duplicated.</p>
-        <input type="file" id="import-file" accept=".xlsx">
-        <button id="import-btn">Import</button>
-        <div id="import-progress" role="status"></div>
-      </section>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="search-tab">Search</button>
+      <button class="tab-btn" data-tab="import-tab">Import data</button>
+    </nav>
 
-      <section class="card voters-card">
-        <h2>Find a voter</h2>
+    <main>
+      <section id="search-tab" class="tab-panel voters-card">
         <div class="search-row">
           <input type="search" id="voter-search" placeholder="Name, house number, or Voter ID">
           <select id="locality-filter"><option value="">All localities</option></select>
         </div>
         <div id="voter-count" class="voter-count"></div>
         <div id="voter-list" class="voter-list"></div>
+      </section>
+
+      <section id="import-tab" class="tab-panel card import-card" hidden>
+        <h2>Import ward data</h2>
+        <p class="lede">Upload a ward's extracted Excel file (with photos) to load it into the shared database. Safe to re-run — existing voters are updated, not duplicated.</p>
+        <input type="file" id="import-file" accept=".xlsx">
+        <button id="import-btn">Import</button>
+        <div id="import-progress" role="status"></div>
       </section>
     </main>
   </section>
@@ -78,7 +82,6 @@
       </div>
     </button>
   </template>
-  </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -90,6 +93,14 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
     }
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach((p) => (p.hidden = true));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).hidden = false;
+      });
+    });
   </script>
 </body>
 </html>
