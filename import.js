@@ -123,6 +123,7 @@ importBtn.addEventListener('click', async () => {
 
     let done = 0;
     let photoFailures = 0;
+    let firstPhotoError = null;
 
     for (let i = 0; i < dataRows.length; i++) {
       const row = dataRows[i];
@@ -146,9 +147,11 @@ importBtn.addEventListener('click', async () => {
           photoPath = await uploadPhoto(imgBlob, safeName);
         } catch (e) {
           photoFailures++;
+          if (!firstPhotoError) firstPhotoError = `Row ${sheetRow} (${voterId}): ${e.message || e}`;
         }
       } else {
         photoFailures++;
+        if (!firstPhotoError) firstPhotoError = `Row ${sheetRow} (${voterId}): no image found anchored to this row`;
       }
 
       const { error } = await sb.from('voters').upsert({
@@ -174,8 +177,10 @@ importBtn.addEventListener('click', async () => {
 
     setProgress(
       `Done. Imported ${done} voters into Ward ${wardNumber}.` +
-      (photoFailures ? `\n${photoFailures} photo(s) could not be matched — those voters were saved without one.` : '\nAll photos matched and uploaded correctly.'),
-      'success'
+      (photoFailures
+        ? `\n${photoFailures} photo(s) could not be uploaded.\nFirst error: ${firstPhotoError}`
+        : '\nAll photos matched and uploaded correctly.'),
+      photoFailures ? 'error' : 'success'
     );
   } catch (err) {
     setProgress(`Import failed: ${err.message}`, 'error');
