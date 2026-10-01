@@ -47,11 +47,37 @@
         <div id="import-progress" role="status"></div>
       </section>
 
-      <p class="placeholder">
-        Voter search, visit logging, and the ward dashboard land in the next
-        build, once at least one ward is imported above.
-      </p>
+      <section class="card voters-card">
+        <h2>Find a voter</h2>
+        <div class="search-row">
+          <input type="search" id="voter-search" placeholder="Name, house number, or Voter ID">
+          <select id="locality-filter"><option value="">All localities</option></select>
+        </div>
+        <div id="voter-count" class="voter-count"></div>
+        <div id="voter-list" class="voter-list"></div>
+      </section>
     </main>
+  </section>
+
+  <section id="detail-view" class="view" hidden>
+    <header>
+      <button id="back-btn" class="ghost">← Back</button>
+      <div class="who">
+        <span id="detail-user-name"></span>
+      </div>
+    </header>
+    <main id="voter-detail"></main>
+  </section>
+
+  <template id="voter-row-template">
+    <button class="voter-row">
+      <img class="voter-thumb" alt="">
+      <div class="voter-row-info">
+        <div class="voter-row-name"></div>
+        <div class="voter-row-meta"></div>
+      </div>
+    </button>
+  </template>
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -59,6 +85,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="app.js"></script>
   <script src="import.js"></script>
+  <script src="voters.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
