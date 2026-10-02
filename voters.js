@@ -17,6 +17,12 @@ let allVoters = [];
 let currentVoter = null;
 let names = {}; // user_id -> display name
 let wardNumbers = {}; // ward_id -> ward number
+let savedScroll = 0;
+
+function debounce(fn, ms) {
+  let t;
+  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
 
 const RELATION_LABEL = { father: 'Father', husband: 'Husband', other: 'Relation' };
 const GENDER_LABEL = { M: 'Male', F: 'Female', O: 'Other' };
@@ -148,6 +154,8 @@ function renderList() {
 }
 
 function showDetail(voter) {
+  savedScroll = window.scrollY;
+  if (!currentVoter) history.pushState({ detail: true }, ''); // phone Back button closes the voter page
   currentVoter = voter;
   detailUserName.textContent = window.appUser ? window.appUser.name : '';
   appView.hidden = true;
@@ -334,15 +342,20 @@ async function loadHistory(box) {
   }));
 }
 
-backBtn.addEventListener('click', () => {
+function closeDetail() {
+  if (!currentVoter) return;
   detailView.hidden = true;
   appView.hidden = false;
   currentVoter = null;
   renderList();
   document.dispatchEvent(new Event('detail-closed'));
-});
+  window.scrollTo(0, savedScroll);
+}
 
-searchInput.addEventListener('input', renderList);
+backBtn.addEventListener('click', () => history.back());
+window.addEventListener('popstate', closeDetail);
+
+searchInput.addEventListener('input', debounce(renderList, 150));
 wardFilter.addEventListener('change', () => { populateLocalities(); renderList(); });
 localityFilter.addEventListener('change', renderList);
 document.addEventListener('voters-changed', loadVoters);
