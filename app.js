@@ -24,6 +24,7 @@ function showApp() {
   appView.hidden = false;
   userNameEl.textContent = window.appUser.name;
   importTabBtn.hidden = !window.appUser.isAdmin; // Import tab: admin only
+  window.scrollTo(0, 0);
 }
 
 function showLogin() {
