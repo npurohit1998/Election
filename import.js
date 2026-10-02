@@ -181,7 +181,7 @@ async function runImport(wardN, alreadyImported, input, progress) {
     if (dataRows.length === 0) throw new Error('No data rows found in this file.');
 
     // Safety: the file's own ward column must match the ward card you used.
-    const wrong = dataRows.find((r) => r[2] && Number(r[0]) !== wardN);
+    const wrong = dataRows.find((r) => r[0] != null && Number(r[0]) !== wardN);
     if (wrong) {
       throw new Error(`This file contains Ward ${wrong[0]} rows, but you used the Ward ${wardN} box. Nothing was imported.`);
     }
@@ -191,6 +191,7 @@ async function runImport(wardN, alreadyImported, input, progress) {
 
     let done = 0;
     let skipped = 0;
+    let noEpic = 0;
     let photoFailures = 0;
     let firstPhotoError = null;
 
@@ -201,10 +202,16 @@ async function runImport(wardN, alreadyImported, input, progress) {
         houseNumber, age, genderRaw, locality, statusRaw
       ] = row;
 
-      if (!voterId) {
-        if (row.some((c) => c !== null)) skipped++;
-        continue;
-      }
+      if (!row.some((c) => c !== null)) continue; // blank row
+
+      // Voters without a real EPIC number (empty, or text like "(new - pending ID)")
+      // get a stable made-up key from ward + serial number, so they are saved
+      // once and re-imports update them instead of duplicating them.
+      const rawId = voterId == null ? '' : String(voterId).trim();
+      const hasEpic = /^[A-Za-z0-9/-]+$/.test(rawId);
+      if (!hasEpic && !serialNumber) { skipped++; continue; }
+      const epic = hasEpic ? rawId : `NOEPIC-${wardN}-${serialNumber}`;
+      if (!hasEpic) noEpic++;
 
       const gender = GENDER_MAP[(genderRaw || '').toLowerCase()] || null;
       const relationType = RELATION_MAP[(relationTypeRaw || '').toLowerCase()] || null;
@@ -216,20 +223,20 @@ async function runImport(wardN, alreadyImported, input, progress) {
       if (imageFile) {
         try {
           const imgBlob = await zip.files[`xl/media/${imageFile}`].async('blob');
-          photoPath = await uploadPhoto(imgBlob, `${String(voterId).replace(/\//g, '_')}.png`);
+          photoPath = await uploadPhoto(imgBlob, `${epic.replace(/\//g, '_')}.png`);
         } catch (e) {
           photoFailures++;
-          if (!firstPhotoError) firstPhotoError = `Row ${sheetRow} (${voterId}): ${e.message || e}`;
+          if (!firstPhotoError) firstPhotoError = `Row ${sheetRow} (${epic}): ${e.message || e}`;
         }
       } else {
         photoFailures++;
-        if (!firstPhotoError) firstPhotoError = `Row ${sheetRow} (${voterId}): no image found anchored to this row`;
+        if (!firstPhotoError) firstPhotoError = `Row ${sheetRow} (${epic}): no image found anchored to this row`;
       }
 
       const { error } = await sb.from('voters').upsert({
         ward_id: wardId,
         serial_number: serialNumber,
-        epic_number: voterId,
+        epic_number: epic,
         name,
         relation_type: relationType,
         relation_name: relationName,
@@ -251,7 +258,8 @@ async function runImport(wardN, alreadyImported, input, progress) {
       kind: photoFailures || skipped ? 'error' : 'success',
       text:
         `Done. Imported ${done} voters into Ward ${wardN}.` +
-        (skipped ? `\n${skipped} row(s) skipped (no Voter ID).` : '') +
+        (noEpic ? `\n${noEpic} voter(s) have no EPIC number — saved as "No EPIC yet".` : '') +
+        (skipped ? `\n${skipped} row(s) skipped (no Voter ID and no serial number).` : '') +
         (photoFailures
           ? `\n${photoFailures} photo(s) could not be uploaded.\nFirst error: ${firstPhotoError}`
           : '\nAll photos matched and uploaded correctly.'),
