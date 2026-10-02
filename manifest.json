@@ -1,6 +1,6 @@
 {
-  "name": "Lordiya Ward 6 Campaign Tracker",
-  "short_name": "Ward 6 Tracker",
+  "name": "Lordiya Campaign Tracker",
+  "short_name": "Lordiya Tracker",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#FAF9F6",
