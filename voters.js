@@ -1,160 +1,84 @@
-// Voter search + list + detail. Loads voters once per app view (cheap at
-// 3,600 rows total across all wards eventually), filters client-side so
-// search feels instant even with patchy signal at a door.
+// ====== CONFIGURE THIS BEFORE DEPLOYING ======
+const SUPABASE_URL = 'https://vgtkzghgkxfgqfdkcgid.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_POoKwht72UIlidvQlnWSEg_DUq2XkDr';
+// The anon/public key is meant to be visible here — security lives in the
+// database's Row Level Security rules. Never put the service_role key here.
+// ==============================================
 
-const searchInput = document.getElementById('voter-search');
-const localityFilter = document.getElementById('locality-filter');
-const voterListEl = document.getElementById('voter-list');
-const voterCountEl = document.getElementById('voter-count');
-const rowTemplate = document.getElementById('voter-row-template');
-const detailView = document.getElementById('detail-view');
-const voterDetailEl = document.getElementById('voter-detail');
-const backBtn = document.getElementById('back-btn');
-const detailUserName = document.getElementById('detail-user-name');
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let allVoters = [];
+const loginView = document.getElementById('login-view');
+const appView = document.getElementById('app-view');
+const detailViewEl = document.getElementById('detail-view');
+const loginForm = document.getElementById('login-form');
+const loginStatus = document.getElementById('login-status');
+const userNameEl = document.getElementById('user-name');
+const signoutBtn = document.getElementById('signout-btn');
+const importTabBtn = document.getElementById('import-tab-btn');
 
-const RELATION_LABEL = { father: "Father", husband: "Husband", other: "Relation" };
-const GENDER_LABEL = { M: 'Male', F: 'Female', O: 'Other' };
-const STATUS_LABEL = { E: 'Deceased', S: 'Shifted', R: 'Duplicate entry' };
-const SUPPORT_LABEL = {
-  strong_support: 'Strong support', leaning: 'Leaning',
-  undecided: 'Undecided', opposition: 'Opposition', unknown: 'Not yet assessed'
-};
+window.appUser = null;
+let currentUserId = null;
 
-async function loadVoters() {
-  voterCountEl.textContent = 'Loading voters…';
-  const { data, error } = await sb
-    .from('voters')
-    .select('*')
-    .order('house_number', { ascending: true });
+function showApp() {
+  loginView.hidden = true;
+  appView.hidden = false;
+  userNameEl.textContent = window.appUser.name;
+  importTabBtn.hidden = !window.appUser.isAdmin; // Import tab: admin only
+}
 
-  if (error) {
-    voterCountEl.textContent = `Couldn't load voters: ${error.message}`;
+function showLogin() {
+  appView.hidden = true;
+  detailViewEl.hidden = true;
+  loginView.hidden = false;
+}
+
+// Runs for the first session and real sign-ins/outs only. Token refreshes
+// (same user) are ignored, so nobody gets bounced out of a voter page
+// mid-edit.
+async function handleSession(session) {
+  if (!session) {
+    currentUserId = null;
+    window.appUser = null;
+    showLogin();
+    document.dispatchEvent(new Event('user-gone'));
     return;
   }
+  if (session.user.id === currentUserId) return;
+  currentUserId = session.user.id;
 
-  allVoters = data;
-  populateLocalityFilter();
-  renderList();
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('is_admin, display_name')
+    .eq('user_id', session.user.id)
+    .maybeSingle();
+
+  window.appUser = {
+    id: session.user.id,
+    email: session.user.email,
+    isAdmin: !!(profile && profile.is_admin),
+    name: (profile && profile.display_name) || session.user.email,
+  };
+  showApp();
+  document.dispatchEvent(new Event('user-ready'));
 }
 
-function populateLocalityFilter() {
-  const localities = [...new Set(allVoters.map((v) => v.locality).filter(Boolean))].sort();
-  localityFilter.innerHTML = '<option value="">All localities</option>' +
-    localities.map((l) => `<option value="${l}">${l}</option>`).join('');
-}
+sb.auth.getSession().then(({ data: { session } }) => handleSession(session));
 
-function matchesSearch(voter, query) {
-  if (!query) return true;
-  const q = query.toLowerCase();
-  return (
-    (voter.name || '').toLowerCase().includes(q) ||
-    (voter.relation_name || '').toLowerCase().includes(q) ||
-    (voter.house_number || '').toLowerCase().includes(q) ||
-    (voter.epic_number || '').toLowerCase().includes(q)
-  );
-}
-
-function renderList() {
-  const query = searchInput.value.trim();
-  const locality = localityFilter.value;
-
-  const filtered = allVoters.filter((v) =>
-    v.is_active &&
-    matchesSearch(v, query) &&
-    (!locality || v.locality === locality)
-  );
-
-  voterCountEl.textContent = query || locality
-    ? `${filtered.length} match${filtered.length === 1 ? '' : 'es'}`
-    : `${filtered.length} active voters`;
-
-  voterListEl.innerHTML = '';
-
-  // Keep it light on screen until someone's actually searching/filtering —
-  // scanning 352 rows by hand isn't the point of a search box.
-  const toShow = (query || locality) ? filtered : filtered.slice(0, 30);
-
-  for (const voter of toShow) {
-    const node = rowTemplate.content.cloneNode(true);
-    const img = node.querySelector('.voter-thumb');
-    img.src = voter.photo_url
-      ? `${SUPABASE_URL}/storage/v1/object/public/voters/${voter.photo_url}`
-      : '';
-    img.alt = voter.name || '';
-    if (!voter.photo_url) img.classList.add('no-photo');
-
-    node.querySelector('.voter-row-name').textContent = voter.name || '(name pending)';
-    node.querySelector('.voter-row-meta').textContent =
-      `House ${voter.house_number || '—'} · ${voter.age || '?'} yrs · ${GENDER_LABEL[voter.gender] || voter.gender || '—'}`;
-    node.querySelector('.voter-row').addEventListener('click', () => showDetail(voter));
-    voterListEl.appendChild(node);
-  }
-
-  if (!query && !locality && filtered.length > 30) {
-    const more = document.createElement('p');
-    more.className = 'list-hint';
-    more.textContent = `Showing 30 of ${filtered.length} — search or filter by locality to narrow this down.`;
-    voterListEl.appendChild(more);
-  }
-}
-
-function showDetail(voter) {
-  detailUserName.textContent = document.getElementById('user-name').textContent;
-  appView.hidden = true;
-  detailView.hidden = false;
-
-  const photoUrl = voter.photo_url
-    ? `${SUPABASE_URL}/storage/v1/object/public/voters/${voter.photo_url}`
-    : null;
-
-  voterDetailEl.innerHTML = `
-    <div class="detail-card">
-      ${photoUrl
-        ? `<img class="detail-photo" src="${photoUrl}" alt="${voter.name || ''}">`
-        : `<div class="detail-photo no-photo"></div>`}
-      <h2>${voter.name || '(name pending)'}</h2>
-      <p class="detail-sub">${RELATION_LABEL[voter.relation_type] || 'Relation'}: ${voter.relation_name || '—'}</p>
-
-      ${voter.deletion_status
-        ? `<p class="status-flag">${STATUS_LABEL[voter.deletion_status]}</p>`
-        : ''}
-
-      <dl class="detail-grid">
-        <dt>House number</dt><dd>${voter.house_number || '—'}</dd>
-        <dt>Age</dt><dd>${voter.age || '—'}</dd>
-        <dt>Gender</dt><dd>${GENDER_LABEL[voter.gender] || voter.gender || '—'}</dd>
-        <dt>Locality</dt><dd>${voter.locality || '—'}</dd>
-        <dt>Voter ID</dt><dd>${voter.epic_number || '—'}</dd>
-        <dt>Serial No.</dt><dd>${voter.serial_number || '—'}</dd>
-      </dl>
-
-      <div class="support-row">
-        <span>Support level</span>
-        <strong>${SUPPORT_LABEL[voter.support_level] || voter.support_level}</strong>
-      </div>
-
-      <p class="placeholder">
-        Changing support level, logging a visit, and marking voted land in the
-        next build.
-      </p>
-    </div>
-  `;
-}
-
-backBtn.addEventListener('click', () => {
-  detailView.hidden = true;
-  appView.hidden = false;
-});
-
-searchInput.addEventListener('input', renderList);
-localityFilter.addEventListener('change', renderList);
-
-// Load voters once the person is actually signed in, not before.
+// setTimeout avoids a known supabase-js lock-up when calling the database
+// directly inside this callback.
 sb.auth.onAuthStateChange((_event, session) => {
-  if (session) loadVoters();
+  setTimeout(() => handleSession(session), 0);
 });
-sb.auth.getSession().then(({ data: { session } }) => {
-  if (session) loadVoters();
+
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  loginStatus.textContent = 'Signing in…';
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  loginStatus.textContent = error ? error.message : '';
 });
+
+signoutBtn.addEventListener('click', () => sb.auth.signOut());
