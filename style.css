@@ -384,3 +384,64 @@ main { padding: 20px 16px 32px; max-width: 640px; }
 }
 
 .support-row strong { color: var(--indigo); }
+
+/* ---- Voter actions ---- */
+.section-label {
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--indigo);
+  margin: 22px 0 8px;
+}
+
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.seg-btn {
+  flex: 1 1 30%;
+  padding: 10px 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.seg-btn.on { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+
+.voted-btn {
+  width: 100%;
+  margin-top: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.voted-btn.on { background: #2F6B3A; border-color: #2F6B3A; color: #fff; }
+
+#voter-detail textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font: inherit;
+  font-size: 0.95rem;
+  background: var(--paper);
+  resize: vertical;
+}
+
+.visit-btn { width: 100%; background: var(--gold); color: #fff; }
+
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.action-msg {
+  min-height: 1.2em;
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: #6B6F76;
+}
+
+.history { text-align: left; font-size: 0.9rem; color: #4A4D53; }
+.history-item { padding: 10px 0; border-top: 1px solid var(--line); }
+.history-item .note { margin-top: 2px; color: var(--ink); }
+.history-item .when { margin-top: 2px; font-size: 0.78rem; color: #6B6F76; }
