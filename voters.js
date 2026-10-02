@@ -26,6 +26,13 @@ const SUPPORT_LABEL = {
   undecided: 'Undecided', opposition: 'Opposition', unknown: 'Not yet assessed',
 };
 const SUPPORT_ORDER = ['strong_support', 'leaning', 'undecided', 'opposition', 'unknown'];
+const EDIT_FIELDS = [
+  ['name', 'Name'], ['relation_type', 'Relation', 'select', RELATION_LABEL],
+  ['relation_name', 'Relation name'], ['house_number', 'House number'],
+  ['age', 'Age', 'number'], ['gender', 'Gender', 'select', GENDER_LABEL],
+  ['locality', 'Locality'], ['epic_number', 'Voter ID (EPIC)'],
+];
+const FIELD_LABEL = Object.fromEntries(EDIT_FIELDS.map(([k, l]) => [k, l]));
 
 function h(tag, cls, text) {
   const e = document.createElement(tag);
@@ -35,8 +42,11 @@ function h(tag, cls, text) {
 }
 
 // Voters with no EPIC are stored under a made-up NOEPIC-… key; show that nicely.
+function realEpic(v) {
+  return v.epic_number && !v.epic_number.startsWith('NOEPIC-') ? v.epic_number : '';
+}
 function shownEpic(v) {
-  return v.epic_number && !v.epic_number.startsWith('NOEPIC-') ? v.epic_number : 'No EPIC yet';
+  return realEpic(v) || 'No EPIC yet';
 }
 
 function photoSrc(v) {
@@ -75,6 +85,7 @@ async function loadVoters() {
   wardFilter.value = chosenWard;
   populateLocalities();
   renderList();
+  document.dispatchEvent(new Event('voters-loaded'));
 }
 
 // Locality choices follow the selected ward.
@@ -163,6 +174,10 @@ function renderDetail() {
     h('p', 'detail-sub', `${RELATION_LABEL[v.relation_type] || 'Relation'}: ${v.relation_name || '—'}`)
   );
   if (v.deletion_status) card.append(h('p', 'status-flag', STATUS_LABEL[v.deletion_status]));
+  const editBtn = h('button', 'edit-btn', '✎ Edit details');
+  editBtn.type = 'button';
+  editBtn.addEventListener('click', renderEdit);
+  card.append(editBtn);
 
   const dl = h('dl', 'detail-grid');
   [
@@ -203,6 +218,8 @@ function renderDetail() {
   visitBtn.addEventListener('click', () => act('visit', null, note.value, true));
   card.append(note, visitBtn, h('p', 'action-msg'));
 
+  if (window.groupSection) card.append(window.groupSection(v));
+
   // History
   card.append(h('div', 'section-label', 'History'));
   const hist = h('div', 'history');
@@ -210,6 +227,62 @@ function renderDetail() {
 
   voterDetailEl.replaceChildren(card);
   loadHistory(hist);
+}
+
+function renderEdit() {
+  const v = currentVoter;
+  const card = h('div', 'detail-card');
+  card.append(h('h2', null, 'Edit voter'), h('p', 'detail-sub', 'Every change is saved in History with your name.'));
+  const inputs = {};
+  const initial = {};
+  EDIT_FIELDS.forEach(([key, label, kind, opts]) => {
+    const wrap = h('label', 'edit-field', label);
+    let el;
+    if (kind === 'select') {
+      el = h('select');
+      el.append(new Option('—', ''), ...Object.entries(opts).map(([k, t]) => new Option(t, k)));
+    } else {
+      el = h('input');
+      el.type = kind || 'text';
+      if (key === 'locality') el.setAttribute('list', 'locality-options');
+    }
+    el.value = key === 'epic_number' ? realEpic(v) : (v[key] == null ? '' : String(v[key]));
+    initial[key] = el.value;
+    inputs[key] = el;
+    wrap.append(el);
+    card.append(wrap);
+  });
+  const dl = h('datalist');
+  dl.id = 'locality-options';
+  [...new Set(allVoters.map((x) => x.locality).filter(Boolean))].sort().forEach((l) => dl.append(new Option(l)));
+
+  const save = h('button', 'visit-btn', 'Save changes');
+  const cancel = h('button', 'cancel-btn', 'Cancel');
+  const msg = h('p', 'action-msg');
+  save.type = cancel.type = 'button';
+  cancel.addEventListener('click', renderDetail);
+  save.addEventListener('click', async () => {
+    const changes = {};
+    for (const key of Object.keys(inputs)) {
+      const val = inputs[key].value.trim();
+      if (val !== initial[key] && !(key === 'epic_number' && !val)) changes[key] = val;
+    }
+    if (!Object.keys(changes).length) { renderDetail(); return; }
+    save.disabled = cancel.disabled = true;
+    msg.textContent = 'Saving…';
+    const { data, error } = await sb.rpc('voter_edit', { p_voter: v.voter_id, p_changes: changes });
+    if (error) {
+      save.disabled = cancel.disabled = false;
+      msg.textContent = `Could not save: ${error.message}`;
+      return;
+    }
+    Object.assign(v, data);
+    renderDetail();
+    voterDetailEl.querySelector('.action-msg').textContent = 'Saved ✓';
+  });
+  card.append(dl, save, cancel, msg);
+  voterDetailEl.replaceChildren(card);
+  window.scrollTo(0, 0);
 }
 
 async function act(type, value, note, keepNote) {
@@ -233,6 +306,9 @@ async function act(type, value, note, keepNote) {
 }
 
 function describeEvent(ev) {
+  if (ev.event_type === 'edit') {
+    return `Edited ${FIELD_LABEL[ev.note] || ev.note}: ${ev.old_value || '—'} → ${ev.new_value || '—'}`;
+  }
   if (ev.event_type === 'support_change') {
     return `Support: ${SUPPORT_LABEL[ev.old_value] || ev.old_value || '—'} → ${SUPPORT_LABEL[ev.new_value] || ev.new_value}`;
   }
@@ -250,7 +326,7 @@ async function loadHistory(box) {
   box.replaceChildren(...data.map((ev) => {
     const item = h('div', 'history-item');
     item.append(h('div', null, describeEvent(ev)));
-    if (ev.note) item.append(h('div', 'note', ev.note));
+    if (ev.note && ev.event_type !== 'edit') item.append(h('div', 'note', ev.note));
     const when = new Date(ev.created_at).toLocaleString('en-IN',
       { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
     item.append(h('div', 'when', `${names[ev.user_id] || 'Someone'} · ${when}`));
@@ -263,6 +339,7 @@ backBtn.addEventListener('click', () => {
   appView.hidden = false;
   currentVoter = null;
   renderList();
+  document.dispatchEvent(new Event('detail-closed'));
 });
 
 searchInput.addEventListener('input', renderList);
