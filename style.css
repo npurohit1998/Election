@@ -445,3 +445,36 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 .history-item { padding: 10px 0; border-top: 1px solid var(--line); }
 .history-item .note { margin-top: 2px; color: var(--ink); }
 .history-item .when { margin-top: 2px; font-size: 0.78rem; color: #6B6F76; }
+
+/* ---- Ward import cards ---- */
+#import-tab .lede { margin-bottom: 16px; }
+
+.ward-import {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.ward-import-title { font-weight: 600; color: var(--indigo); }
+.ward-summary { font-size: 0.88rem; color: #6B6F76; margin: 4px 0 12px; }
+.ward-summary.ok { color: #2F6B3A; }
+.ward-summary.warn { color: #9A6A1F; }
+
+.ward-import input[type="file"] {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0 0 10px;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+}
+
+.ward-import button { background: var(--indigo); color: #fff; }
+.ward-import button:hover { background: var(--indigo-light); }
+
+.ward-progress { margin-top: 10px; font-size: 0.88rem; color: #4A4D53; white-space: pre-line; }
+.ward-progress.error { color: var(--error); }
+.ward-progress.success { color: #2F6B3A; }
