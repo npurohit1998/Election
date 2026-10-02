@@ -2,9 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>लोर्डिया ग्राम पंचायत — Campaign Tracker</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lordiya Tracker">
   <meta name="theme-color" content="#1E2A4A">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -92,7 +98,7 @@
 
   <template id="voter-row-template">
     <button class="voter-row">
-      <img class="voter-thumb" alt="">
+      <img class="voter-thumb" alt="" loading="lazy" decoding="async">
       <div class="voter-row-info">
         <div class="voter-row-name"></div>
         <div class="voter-row-meta"></div>
@@ -117,6 +123,8 @@
         document.querySelectorAll('.tab-panel').forEach((p) => (p.hidden = true));
         btn.classList.add('active');
         document.getElementById(btn.dataset.tab).hidden = false;
+        btn.scrollIntoView({ inline: 'center', block: 'nearest' });
+        window.scrollTo(0, 0);
       });
     });
   </script>
