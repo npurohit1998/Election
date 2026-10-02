@@ -231,7 +231,7 @@ async function changeMembership(voter, groupId, add) {
   renderGroups();
 }
 
-familySearch.addEventListener('input', renderFamilies);
+familySearch.addEventListener('input', debounce(renderFamilies, 150));
 document.addEventListener('voters-loaded', renderFamilies);
 document.addEventListener('detail-closed', () => { renderFamilies(); renderGroups(); });
 document.addEventListener('user-ready', loadGroups);
