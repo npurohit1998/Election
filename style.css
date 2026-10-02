@@ -478,3 +478,47 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 .ward-progress { margin-top: 10px; font-size: 0.88rem; color: #4A4D53; white-space: pre-line; }
 .ward-progress.error { color: var(--error); }
 .ward-progress.success { color: #2F6B3A; }
+
+/* ---- Edit, groups, families ---- */
+.edit-btn {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--indigo);
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #4A4D53;
+}
+
+.edit-field input, #voter-detail select {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font: inherit;
+  font-size: 1rem;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.edit-field input, .edit-field select { margin: 6px 0 0; }
+#voter-detail select { width: 100%; }
+
+.cancel-btn { width: 100%; margin-top: 8px; background: none; color: #6B6F76; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; text-align: left; margin-bottom: 8px; }
+.chip { background: #EEF0F6; color: var(--indigo); padding: 6px 12px; font-size: 0.82rem; font-weight: 500; border-radius: 14px; }
+.muted { margin: 0 0 12px; font-size: 0.85rem; color: #6B6F76; }
+.back-link { background: none; color: var(--indigo); padding: 0 0 12px; font-size: 0.9rem; font-weight: 500; }
+.panel-title { margin: 0 0 4px; font-size: 1.15rem; color: var(--indigo); }
+.danger-btn { width: 100%; margin-top: 16px; background: none; border: 1px solid var(--error); color: var(--error); }
+#new-group-btn { margin-bottom: 14px; }
+#family-detail .visit-btn, #group-detail .visit-btn { margin-bottom: 4px; }
+#family-detail .voter-list, #group-detail .voter-list { margin-top: 12px; }
