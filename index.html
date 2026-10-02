@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>लोर्डिया वार्ड 6 — Campaign Tracker</title>
+  <title>लोर्डिया ग्राम पंचायत — Campaign Tracker</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1E2A4A">
   <link rel="stylesheet" href="style.css">
@@ -12,7 +12,7 @@
 
   <section id="login-view" class="view">
     <div class="card">
-      <h1>लोर्डिया वार्ड 6</h1>
+      <h1>लोर्डिया ग्राम पंचायत</h1>
       <p class="lede">Campaign tracker — family access only</p>
 
       <form id="login-form">
@@ -31,7 +31,7 @@
 
   <section id="app-view" class="view" hidden>
     <header>
-      <h1>लोर्डिया वार्ड 6</h1>
+      <h1>लोर्डिया ग्राम पंचायत</h1>
       <div class="who">
         <span id="user-name"></span>
         <button id="signout-btn" class="ghost">Sign out</button>
@@ -47,18 +47,16 @@
       <section id="search-tab" class="tab-panel voters-card">
         <div class="search-row">
           <input type="search" id="voter-search" placeholder="Name, house number, or Voter ID">
+          <select id="ward-filter"><option value="">All wards</option></select>
           <select id="locality-filter"><option value="">All localities</option></select>
         </div>
         <div id="voter-count" class="voter-count"></div>
         <div id="voter-list" class="voter-list"></div>
       </section>
 
-      <section id="import-tab" class="tab-panel card import-card" hidden>
-        <h2>Import ward data</h2>
-        <p class="lede">Upload a ward's extracted Excel file (with photos) to load it into the shared database. Safe to re-run — existing voters are updated, not duplicated.</p>
-        <input type="file" id="import-file" accept=".xlsx">
-        <button id="import-btn">Import</button>
-        <div id="import-progress" role="status"></div>
+      <section id="import-tab" class="tab-panel" hidden>
+        <p class="lede">Upload each ward's Excel file (with photos). Re-importing a ward updates its voters — nothing is duplicated, and support levels, visits and voted marks are kept.</p>
+        <div id="ward-import-list"></div>
       </section>
     </main>
   </section>
