@@ -1,3 +1,6 @@
+/* hidden attribute must always win (login page was staying visible) */
+[hidden] { display: none !important; }
+
 :root {
   --indigo: #1E2A4A;
   --indigo-light: #2E3D63;
@@ -17,9 +20,11 @@ body {
   background: var(--paper);
   color: var(--ink);
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
-.view { min-height: 100vh; }
+.view { min-height: 100vh;
+  min-height: 100dvh; }
 
 /* ---- Login ---- */
 #login-view {
@@ -522,3 +527,84 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 #new-group-btn { margin-bottom: 14px; }
 #family-detail .visit-btn, #group-detail .visit-btn { margin-bottom: 4px; }
 #family-detail .voter-list, #group-detail .voter-list { margin-top: 12px; }
+
+
+/* =====================================================
+   MOBILE / PWA OPTIMISATIONS
+   ===================================================== */
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+button, .voter-row, .tab-btn, select { touch-action: manipulation; }
+
+/* 16px+ inputs stop iOS Safari from zooming the page on focus */
+input, select, textarea { font-size: 16px !important; }
+
+main { margin: 0 auto; }
+
+/* Header sits under the status bar in standalone mode */
+#app-view header, #detail-view header {
+  padding-top: calc(14px + env(safe-area-inset-top));
+}
+#detail-view header { position: sticky; top: 0; z-index: 20; }
+#app-view header h1 {
+  font-size: 1rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.who { flex-shrink: 0; gap: 10px; }
+#user-name, #detail-user-name {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button.ghost { min-height: 40px; padding: 8px 14px; }
+
+/* Tabs: sticky, swipeable, never wrap */
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn { flex-shrink: 0; white-space: nowrap; min-height: 48px; }
+
+/* Comfortable touch targets */
+.voter-row { min-height: 64px; }
+.seg-btn { min-height: 46px; }
+.voted-btn, .visit-btn, .cancel-btn, .danger-btn { min-height: 48px; }
+.edit-btn { min-height: 40px; }
+.chip { min-height: 38px; }
+.back-link { min-height: 44px; padding-right: 16px; }
+.ward-import button { min-height: 46px; width: 100%; }
+
+@media (max-width: 480px) {
+  main { padding: 14px 12px 32px; }
+  #app-view header { padding-left: 14px; padding-right: 14px; }
+  #detail-view header { padding-left: 14px; padding-right: 14px; }
+  #voter-detail { padding: 14px 12px 32px; }
+  .detail-card { padding: 22px 16px; }
+  .card { padding: 32px 22px; }
+  .voter-thumb { width: 48px; height: 48px; }
+  .detail-photo { width: 104px; height: 104px; }
+  .seg-btn { flex: 1 1 45%; }
+}
+
+/* Landscape phones: don't force a tall login card */
+@media (max-height: 480px) {
+  #login-view { align-items: flex-start; }
+  .card { padding: 20px 22px; }
+}
