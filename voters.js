@@ -34,6 +34,11 @@ function h(tag, cls, text) {
   return e;
 }
 
+// Voters with no EPIC are stored under a made-up NOEPIC-… key; show that nicely.
+function shownEpic(v) {
+  return v.epic_number && !v.epic_number.startsWith('NOEPIC-') ? v.epic_number : 'No EPIC yet';
+}
+
 function photoSrc(v) {
   return `${SUPABASE_URL}/storage/v1/object/public/voters/${v.photo_url}`;
 }
@@ -163,7 +168,7 @@ function renderDetail() {
   [
     ['Ward', wardNumbers[v.ward_id]], ['House number', v.house_number], ['Age', v.age],
     ['Gender', GENDER_LABEL[v.gender] || v.gender], ['Locality', v.locality],
-    ['Voter ID', v.epic_number], ['Serial No.', v.serial_number],
+    ['Voter ID', shownEpic(v)], ['Serial No.', v.serial_number],
   ].forEach(([k, val]) => dl.append(h('dt', null, k), h('dd', null, val || '—')));
   card.append(dl);
 
