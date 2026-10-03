@@ -608,3 +608,30 @@ button.ghost { min-height: 40px; padding: 8px 14px; }
   #login-view { align-items: flex-start; }
   .card { padding: 20px 22px; }
 }
+
+/* ---- Admin dashboard (read-only) ---- */
+.dash-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.dash-card { background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--line); padding: 12px 6px; text-align: center; color: var(--ink); }
+.dash-card.strong_support { border-top-color: #2F6B3A; }
+.dash-card.leaning { border-top-color: var(--gold); }
+.dash-card.opposition { border-top-color: var(--error); }
+.dash-big { font-size: 1.7rem; font-weight: 700; color: var(--indigo); }
+.dash-lbl { font-size: 0.78rem; color: #4A4D53; margin-top: 2px; }
+.dash-pct { font-size: 0.78rem; color: #6B6F76; }
+.dash-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--line); margin-bottom: 10px; }
+.dash-bar .strong_support { background: #2F6B3A; }
+.dash-bar .leaning { background: var(--gold); }
+.dash-bar .undecided { background: #9AA0AB; }
+.dash-bar .opposition { background: var(--error); }
+.dash-bar .unknown { background: #D5D2C9; }
+.dash-rest { display: flex; flex-wrap: wrap; gap: 18px; }
+.dash-link { background: none; color: var(--indigo); padding: 6px 0; font-size: 0.9rem; font-weight: 600; text-align: left; min-height: 44px; }
+.dash-link:disabled { color: #9AA0AB; }
+.dash-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); font-size: 0.9rem; }
+.dash-table th, .dash-table td { padding: 2px 6px; text-align: center; border-bottom: 1px solid var(--line); }
+.dash-table th:first-child, .dash-table td:first-child { text-align: left; }
+.dash-table th { padding: 8px 6px; font-size: 0.78rem; color: #6B6F76; font-weight: 600; }
+.dash-num { background: none; color: var(--indigo); font-weight: 700; min-width: 44px; min-height: 44px; padding: 0; }
+.dash-num:disabled { color: #B7BAC2; opacity: 1; }
+.dash-gap { height: 12px; }
+#dashboard-tab .visit-btn { margin-top: 4px; }
