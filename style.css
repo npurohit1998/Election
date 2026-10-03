@@ -635,3 +635,6 @@ button.ghost { min-height: 40px; padding: 8px 14px; }
 .dash-num:disabled { color: #B7BAC2; opacity: 1; }
 .dash-gap { height: 12px; }
 #dashboard-tab .visit-btn { margin-top: 4px; }
+
+.dash-refresh { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.dash-refresh .muted { margin: 0; }
