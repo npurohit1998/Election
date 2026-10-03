@@ -189,6 +189,11 @@
       root.append(back);
     }
     root.append(h('h2', 'panel-title', scopeName), h('p', 'muted', `${t.total} active voters (मृत / shifted / duplicate शामिल नहीं)`));
+    const rf = h('div', 'dash-refresh');
+    const stampEl = h('span', 'muted', lastSync ? `अपडेट: ${lastSync}` : '');
+    stampEl.id = 'dash-stamp';
+    rf.append(linkBtn('↻ पूरा reload', () => document.dispatchEvent(new Event('voters-changed'))), stampEl);
+    root.append(rf);
 
     const cards = h('div', 'dash-cards');
     SUP_KEYS.forEach((k) => {
@@ -241,15 +246,66 @@
     dashRoot.replaceChildren(root);
   }
 
+  // ---------- Live sync (light: only new support/voted events, read-only) ----------
+  let since = null;
+  let syncing = false;
+  let lastSync = '';
+  const dashVisible = () => !document.getElementById('dashboard-tab').hidden && !appView.hidden;
+
+  async function startSync() {
+    const { data } = await sb.from('voter_events').select('created_at').order('created_at', { ascending: false }).limit(1);
+    if (data) since = data[0] ? new Date(Date.parse(data[0].created_at) - 120000).toISOString() : '1970-01-01T00:00:00Z';
+  }
+
+  async function syncChanges() {
+    if (syncing || !window.appUser || !window.appUser.isAdmin || !allVoters.length) return;
+    syncing = true;
+    try {
+      if (!since) await startSync();
+      if (!since) return;
+      const evs = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await sb.from('voter_events').select('voter_id, event_type, new_value, created_at')
+          .in('event_type', ['support_change', 'voted']).gte('created_at', since)
+          .order('created_at').order('voter_id').range(from, from + 999);
+        if (error) throw error;
+        evs.push(...data);
+        if (data.length < 1000) break;
+      }
+      const byId = new Map(allVoters.map((v) => [v.voter_id, v]));
+      let changed = false;
+      evs.forEach((ev) => {
+        const v = byId.get(ev.voter_id);
+        if (!v) return;
+        if (ev.event_type === 'support_change' && v.support_level !== ev.new_value) { v.support_level = ev.new_value; changed = true; }
+        if (ev.event_type === 'voted' && v.voted !== (ev.new_value === 'true')) { v.voted = ev.new_value === 'true'; changed = true; }
+      });
+      if (evs.length) since = new Date(Date.parse(evs[evs.length - 1].created_at) - 30000).toISOString();
+      lastSync = new Date().toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+      if (changed) renderDash();
+      const el = document.getElementById('dash-stamp');
+      if (el) el.textContent = `अपडेट: ${lastSync}`;
+    } catch (e) {
+      console.warn('dashboard sync failed', e);
+    } finally {
+      syncing = false;
+    }
+  }
+
   // ---------- Wiring ----------
   document.addEventListener('user-ready', () => {
     dashTabBtn.hidden = !window.appUser.isAdmin;
     renderDash();
   });
-  document.addEventListener('voters-loaded', () => { dash.list = null; renderDash(); });
-  document.addEventListener('detail-closed', renderDash);
+  document.addEventListener('voters-loaded', () => { dash.list = null; renderDash(); startSync(); });
+  document.addEventListener('detail-closed', () => { renderDash(); syncChanges(); });
+  dashTabBtn.addEventListener('click', syncChanges);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && dashVisible()) syncChanges(); });
+  setInterval(() => { if (!document.hidden && dashVisible()) syncChanges(); }, 30000);
   document.addEventListener('user-gone', () => {
     dash.ward = dash.list = null;
+    since = null;
+    lastSync = '';
     dashTabBtn.hidden = true;
     dashRoot.replaceChildren();
     document.querySelector('.tab-btn[data-tab="search-tab"]').click(); // don't leave a non-admin on this tab
