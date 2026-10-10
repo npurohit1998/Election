@@ -59,6 +59,11 @@ function normPhone(s) {
   return /^[6-9]\d{9}$/.test(d) ? d : '';
 }
 
+// WhatsApp का तैयार संदेश (volunteer को सिर्फ़ Send दबाना होता है). बदलना हो तो सिर्फ़ यह text बदलिए.
+const WA_MESSAGE =
+  'नमस्कार, मैं भीमराज पुरोहित आपके सहयोग व विश्वास के बलबूते 24 अक्टूबर 2026 को होने जा रहे लोर्डियाँ गाँव के सरपंच पद के प्रत्याशी के रूप में खड़ा हूँ ।\n' +
+  '24 अक्टूबर को मतदान कर मुझे विजयी बनाने में आपका सहयोग परम आवश्यक है ।';
+
 // Mobile number + Call / WhatsApp buttons. Every tap is logged (who + when),
 // so all volunteers can see it in History.
 function phoneBlock(v, onLogged) {
@@ -71,7 +76,7 @@ function phoneBlock(v, onLogged) {
   }
   const msg = h('p', 'action-msg');
   const row = h('div', 'phone-actions');
-  [['call', '📞 Call', `tel:+91${num}`], ['whatsapp', '💬 WhatsApp', `https://wa.me/91${num}`]].forEach(([type, label, href]) => {
+  [['call', '📞 Call', `tel:+91${num}`], ['whatsapp', '💬 WhatsApp', `https://wa.me/91${num}?text=${encodeURIComponent(WA_MESSAGE)}`]].forEach(([type, label, href]) => {
     const a = h('a', `phone-btn ${type}`, label);
     a.href = href;
     if (type === 'whatsapp') { a.target = '_blank'; a.rel = 'noopener'; }
