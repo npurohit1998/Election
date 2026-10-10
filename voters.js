@@ -36,7 +36,7 @@ const EDIT_FIELDS = [
   ['name', 'Name'], ['relation_type', 'Relation', 'select', RELATION_LABEL],
   ['relation_name', 'Relation name'], ['house_number', 'House number'],
   ['age', 'Age', 'number'], ['gender', 'Gender', 'select', GENDER_LABEL],
-  ['locality', 'Locality'], ['epic_number', 'Voter ID (EPIC)'],
+  ['locality', 'Locality'], ['phone', 'Mobile number', 'tel'], ['epic_number', 'Voter ID (EPIC)'],
 ];
 const FIELD_LABEL = Object.fromEntries(EDIT_FIELDS.map(([k, l]) => [k, l]));
 
@@ -51,6 +51,40 @@ function h(tag, cls, text) {
 function realEpic(v) {
   return v.epic_number && !v.epic_number.startsWith('NOEPIC-') ? v.epic_number : '';
 }
+// Indian mobile: keeps 10 digits (drops +91 / leading 0); '' if invalid.
+function normPhone(s) {
+  let d = String(s || '').replace(/\D/g, '');
+  if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
+  if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
+  return /^[6-9]\d{9}$/.test(d) ? d : '';
+}
+
+// Mobile number + Call / WhatsApp buttons. Every tap is logged (who + when),
+// so all volunteers can see it in History.
+function phoneBlock(v, onLogged) {
+  const box = h('div', 'phone-box');
+  box.append(h('div', 'section-label', 'Mobile'));
+  const num = normPhone(v.phone);
+  if (!num) {
+    box.append(h('p', 'muted', 'नंबर नहीं जुड़ा — "✎ Edit details" से जोड़ें।'));
+    return box;
+  }
+  const msg = h('p', 'action-msg');
+  const row = h('div', 'phone-actions');
+  [['call', '📞 Call', `tel:+91${num}`], ['whatsapp', '💬 WhatsApp', `https://wa.me/91${num}`]].forEach(([type, label, href]) => {
+    const a = h('a', `phone-btn ${type}`, label);
+    a.href = href;
+    if (type === 'whatsapp') { a.target = '_blank'; a.rel = 'noopener'; }
+    a.addEventListener('click', async () => { // link still opens; logging runs alongside
+      const { error } = await sb.rpc('voter_contact', { p_voter: v.voter_id, p_channel: type });
+      if (error) msg.textContent = `Log नहीं हुआ: ${error.message}`; else onLogged();
+    });
+    row.append(a);
+  });
+  box.append(h('div', 'phone-num', num), row, msg, h('div', 'last-contact'));
+  return box;
+}
+
 function shownEpic(v) {
   return realEpic(v) || 'No EPIC yet';
 }
@@ -111,7 +145,8 @@ function matchesSearch(voter, query) {
     (voter.name || '').toLowerCase().includes(q) ||
     (voter.relation_name || '').toLowerCase().includes(q) ||
     (voter.house_number || '').toLowerCase().includes(q) ||
-    (voter.epic_number || '').toLowerCase().includes(q)
+    (voter.epic_number || '').toLowerCase().includes(q) ||
+    (voter.phone || '').includes(q)
   );
 }
 
@@ -195,6 +230,8 @@ function renderDetail() {
   ].forEach(([k, val]) => dl.append(h('dt', null, k), h('dd', null, val || '—')));
   card.append(dl);
 
+  card.append(phoneBlock(v, () => loadHistory(hist)));
+
   // Support level
   card.append(h('div', 'section-label', 'Support level'));
   const seg = h('div', 'seg');
@@ -253,6 +290,7 @@ function renderEdit() {
       el = h('input');
       el.type = kind || 'text';
       if (key === 'locality') el.setAttribute('list', 'locality-options');
+      if (key === 'phone') { el.placeholder = '10 अंक, जैसे 9876543210'; el.inputMode = 'numeric'; }
     }
     el.value = key === 'epic_number' ? realEpic(v) : (v[key] == null ? '' : String(v[key]));
     initial[key] = el.value;
@@ -272,7 +310,11 @@ function renderEdit() {
   save.addEventListener('click', async () => {
     const changes = {};
     for (const key of Object.keys(inputs)) {
-      const val = inputs[key].value.trim();
+      let val = inputs[key].value.trim();
+      if (key === 'phone' && val) {
+        val = normPhone(val);
+        if (!val) { msg.textContent = 'Mobile number सही नहीं — 10 अंक चाहिए (6–9 से शुरू)।'; return; }
+      }
       if (val !== initial[key] && !(key === 'epic_number' && !val)) changes[key] = val;
     }
     if (!Object.keys(changes).length) { renderDetail(); return; }
@@ -321,6 +363,8 @@ function describeEvent(ev) {
     return `Support: ${SUPPORT_LABEL[ev.old_value] || ev.old_value || '—'} → ${SUPPORT_LABEL[ev.new_value] || ev.new_value}`;
   }
   if (ev.event_type === 'voted') return ev.new_value === 'true' ? 'Marked as voted' : 'Voted mark removed';
+  if (ev.event_type === 'call') return '📞 Call किया';
+  if (ev.event_type === 'whatsapp') return '💬 WhatsApp खोला';
   return 'Visit';
 }
 
@@ -330,6 +374,12 @@ async function loadHistory(box) {
     .eq('voter_id', currentVoter.voter_id).order('created_at', { ascending: false });
   if (error) { box.textContent = `Couldn't load history: ${error.message}`; return; }
   if (!data.length) { box.textContent = 'Nothing logged yet.'; return; }
+  const lc = voterDetailEl.querySelector('.last-contact');
+  const lastC = data.find((ev) => ev.event_type === 'call' || ev.event_type === 'whatsapp');
+  if (lc && lastC) {
+    const t = new Date(lastC.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+    lc.textContent = `आख़िरी संपर्क: ${describeEvent(lastC)} — ${names[lastC.user_id] || 'Someone'}, ${t}`;
+  }
 
   box.replaceChildren(...data.map((ev) => {
     const item = h('div', 'history-item');
