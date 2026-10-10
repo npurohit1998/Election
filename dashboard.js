@@ -32,7 +32,7 @@
   function exportRow(v) {
     return {
       Ward: wardNumbers[v.ward_id] || '', 'Serial No.': v.serial_number ?? '', 'Voter ID': realEpic(v),
-      Name: v.name || '', Relation: RELATION_LABEL[v.relation_type] || '', 'Relation name': v.relation_name || '',
+      Name: v.name || '', Mobile: v.phone || '', Relation: RELATION_LABEL[v.relation_type] || '', 'Relation name': v.relation_name || '',
       House: v.house_number || '', Age: v.age ?? '', Gender: GENDER_LABEL[v.gender] || '',
       Locality: v.locality || '', Support: SUPPORT_LABEL[supOf(v)] || supOf(v), Voted: v.voted ? 'Yes' : 'No',
       Status: STATUS_LABEL[v.deletion_status] || (v.is_active ? 'Active' : 'Inactive'),
@@ -142,7 +142,7 @@
     node.querySelector('.voter-row-name').textContent = v.name || '(name pending)';
     node.querySelector('.voter-row-meta').textContent =
       `Ward ${wardNumbers[v.ward_id] || '?'} · House ${v.house_number || '—'} · ${v.locality || '—'}` +
-      (v.voted ? ' · ✓ Voted' : '');
+      (v.voted ? ' · ✓ Voted' : '') + (v.phone ? ' · 📞' : '');
     node.querySelector('.voter-row').addEventListener('click', () => showDetail(v));
     return node;
   }
@@ -167,11 +167,11 @@
     }
     if (!voters.length) box.append(h('p', 'list-hint', 'इस सूची में कोई voter नहीं।'));
 
-    dashRoot.replaceChildren(back, h('h2', 'panel-title', title), h('p', 'muted', `${voters.length} voters`), xl, h('div', 'dash-gap'), box);
+    dashRoot.replaceChildren(back, h('h2', 'panel-title', title), h('p', 'muted', `${voters.length} voters`), ...(window.appUser.isAdmin ? [xl] : []), h('div', 'dash-gap'), box);
   }
 
   function renderDash() {
-    if (!window.appUser || !window.appUser.isAdmin) return;
+    if (!window.appUser) return;
     if (!allVoters.length) { dashRoot.replaceChildren(h('p', 'list-hint', 'Loading…')); return; }
     if (dash.list) return renderDashList();
 
@@ -236,6 +236,12 @@
     root.append(h('div', 'section-label', dash.ward ? 'Locality-wise' : 'Ward-wise'), statTable(dash.ward ? 'Locality' : 'Ward', rows));
 
     if (!dash.ward) {
+      const feed = h('div', 'voter-list');
+      root.append(h('div', 'section-label', 'हाल के Call / WhatsApp (किसने किया)'), feed);
+      loadContactFeed(feed);
+    }
+
+    if (!dash.ward && window.appUser.isAdmin) { // Excel backup stays admin-only (has phone numbers)
       const msg = h('p', 'action-msg');
       const bk = h('button', 'visit-btn', '⬇ पूरा Backup (Excel)');
       bk.type = 'button';
@@ -244,6 +250,26 @@
         h('p', 'muted', 'सभी voters + support level + History + Groups एक Excel में। हफ़्ते में एक बार लीजिए।'), bk, msg);
     }
     dashRoot.replaceChildren(root);
+  }
+
+  async function loadContactFeed(box) {
+    const { data, error } = await sb.from('voter_events').select('voter_id, user_id, event_type, created_at')
+      .in('event_type', ['call', 'whatsapp']).order('created_at', { ascending: false }).limit(20);
+    if (error) { box.textContent = `Couldn't load: ${error.message}`; return; }
+    if (!data.length) { box.append(h('p', 'list-hint', 'अभी तक किसी ने Call / WhatsApp नहीं किया।')); return; }
+    const byId = new Map(allVoters.map((x) => [x.voter_id, x]));
+    box.replaceChildren(...data.map((ev) => {
+      const v = byId.get(ev.voter_id);
+      const row = h('button', 'voter-row');
+      row.type = 'button';
+      const info = h('div', 'voter-row-info');
+      const when = new Date(ev.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+      info.append(h('div', 'voter-row-name', `${ev.event_type === 'call' ? '📞' : '💬'} ${v ? v.name || '(name pending)' : '(voter)'}`),
+        h('div', 'voter-row-meta', `${names[ev.user_id] || 'Someone'} · ${when}`));
+      row.append(info);
+      if (v) row.addEventListener('click', () => showDetail(v));
+      return row;
+    }));
   }
 
   // ---------- Live sync (light: only new support/voted events, read-only) ----------
@@ -258,7 +284,7 @@
   }
 
   async function syncChanges() {
-    if (syncing || !window.appUser || !window.appUser.isAdmin || !allVoters.length) return;
+    if (syncing || !window.appUser || !allVoters.length) return;
     syncing = true;
     try {
       if (!since) await startSync();
@@ -294,12 +320,12 @@
 
   // ---------- Wiring ----------
   document.addEventListener('user-ready', () => {
-    dashTabBtn.hidden = !window.appUser.isAdmin;
+    dashTabBtn.hidden = false;
     renderDash();
   });
   document.addEventListener('voters-loaded', () => { dash.list = null; renderDash(); startSync(); });
   document.addEventListener('detail-closed', () => { renderDash(); syncChanges(); });
-  dashTabBtn.addEventListener('click', syncChanges);
+  dashTabBtn.addEventListener('click', () => { renderDash(); syncChanges(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && dashVisible()) syncChanges(); });
   setInterval(() => { if (!document.hidden && dashVisible()) syncChanges(); }, 30000);
   document.addEventListener('user-gone', () => {
@@ -308,6 +334,6 @@
     lastSync = '';
     dashTabBtn.hidden = true;
     dashRoot.replaceChildren();
-    document.querySelector('.tab-btn[data-tab="search-tab"]').click(); // don't leave a non-admin on this tab
+    document.querySelector('.tab-btn[data-tab="search-tab"]').click(); // don't leave the next user on this tab
   });
 })();
