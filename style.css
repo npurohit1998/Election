@@ -638,3 +638,16 @@ button.ghost { min-height: 40px; padding: 8px 14px; }
 
 .dash-refresh { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
 .dash-refresh .muted { margin: 0; }
+
+/* ---- Tap-to-call ---- */
+.call-btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin-bottom: 14px; background: #2F6B3A; color: #fff; border-radius: 3px; font-size: 1.05rem; font-weight: 600; text-decoration: none; }
+.call-add { width: 100%; min-height: 46px; margin-bottom: 14px; background: none; border: 1px dashed var(--gold); color: var(--indigo); font-size: 0.9rem; font-weight: 500; }
+
+/* ---- Phone / contact ---- */
+.phone-box { text-align: left; }
+.phone-num { font-size: 1.15rem; font-weight: 600; color: var(--indigo); margin-bottom: 8px; letter-spacing: 0.5px; }
+.phone-actions { display: flex; gap: 8px; }
+.phone-btn { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 3px; font-weight: 600; font-size: 1rem; text-decoration: none; color: #fff; touch-action: manipulation; }
+.phone-btn.call { background: var(--indigo); }
+.phone-btn.whatsapp { background: #1F7A44; }
+.last-contact { margin-top: 8px; font-size: 0.82rem; color: #6B6F76; }
