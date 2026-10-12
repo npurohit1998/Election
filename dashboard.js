@@ -237,8 +237,10 @@
 
     if (!dash.ward) {
       const feed = h('div', 'voter-list');
-      root.append(h('div', 'section-label', 'हाल के Call / WhatsApp (किसने किया)'), feed);
-      loadContactFeed(feed);
+      feed.id = 'dash-feed';
+      const more = linkBtn('और दिखाएँ ↓', () => { feedLimit += 30; loadActivityFeed(feed); });
+      root.append(h('div', 'section-label', 'हाल की गतिविधि — किस volunteer ने क्या किया'), feed, more);
+      loadActivityFeed(feed);
     }
 
     if (!dash.ward && window.appUser.isAdmin) { // Excel backup stays admin-only (has phone numbers)
@@ -252,11 +254,16 @@
     dashRoot.replaceChildren(root);
   }
 
-  async function loadContactFeed(box) {
-    const { data, error } = await sb.from('voter_events').select('voter_id, user_id, event_type, created_at')
-      .in('event_type', ['call', 'whatsapp']).order('created_at', { ascending: false }).limit(20);
+  const EV_ICON = { visit: '🏠', support_change: '🎯', voted: '✅', edit: '✏️', call: '📞', whatsapp: '💬' };
+  let feedLimit = 30;
+
+  // Every logged change by any volunteer (visit, support, voted, edits, call, WhatsApp).
+  async function loadActivityFeed(box) {
+    const { data, error } = await sb.from('voter_events')
+      .select('voter_id, user_id, event_type, old_value, new_value, note, created_at')
+      .order('created_at', { ascending: false }).limit(feedLimit);
     if (error) { box.textContent = `Couldn't load: ${error.message}`; return; }
-    if (!data.length) { box.append(h('p', 'list-hint', 'अभी तक किसी ने Call / WhatsApp नहीं किया।')); return; }
+    if (!data.length) { box.replaceChildren(h('p', 'list-hint', 'अभी तक कोई गतिविधि नहीं।')); return; }
     const byId = new Map(allVoters.map((x) => [x.voter_id, x]));
     box.replaceChildren(...data.map((ev) => {
       const v = byId.get(ev.voter_id);
@@ -264,8 +271,11 @@
       row.type = 'button';
       const info = h('div', 'voter-row-info');
       const when = new Date(ev.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
-      info.append(h('div', 'voter-row-name', `${ev.event_type === 'call' ? '📞' : '💬'} ${v ? v.name || '(name pending)' : '(voter)'}`),
-        h('div', 'voter-row-meta', `${names[ev.user_id] || 'Someone'} · ${when}`));
+      info.append(
+        h('div', 'voter-row-name', `${EV_ICON[ev.event_type] || '🏠'} ${names[ev.user_id] || 'Someone'}`),
+        h('div', 'voter-row-meta', describeEvent(ev)),
+        h('div', 'voter-row-meta', `${v ? v.name || '(name pending)' : '(voter)'} · ${when}`));
+      if (ev.note && ev.event_type !== 'edit') info.append(h('div', 'voter-row-meta', `“${ev.note.slice(0, 80)}”`));
       row.append(info);
       if (v) row.addEventListener('click', () => showDetail(v));
       return row;
@@ -327,11 +337,17 @@
   document.addEventListener('detail-closed', () => { renderDash(); syncChanges(); });
   dashTabBtn.addEventListener('click', () => { renderDash(); syncChanges(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && dashVisible()) syncChanges(); });
-  setInterval(() => { if (!document.hidden && dashVisible()) syncChanges(); }, 30000);
+  setInterval(() => {
+    if (document.hidden || !dashVisible()) return;
+    syncChanges();
+    const f = document.getElementById('dash-feed');
+    if (f) loadActivityFeed(f);
+  }, 30000);
   document.addEventListener('user-gone', () => {
     dash.ward = dash.list = null;
     since = null;
     lastSync = '';
+    feedLimit = 30;
     dashTabBtn.hidden = true;
     dashRoot.replaceChildren();
     document.querySelector('.tab-btn[data-tab="search-tab"]').click(); // don't leave the next user on this tab
