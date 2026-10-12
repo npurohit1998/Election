@@ -49,13 +49,14 @@
       <button class="tab-btn" data-tab="families-tab">Families</button>
       <button class="tab-btn" data-tab="groups-tab">Groups</button>
       <button class="tab-btn" id="dashboard-tab-btn" data-tab="dashboard-tab" hidden>Dashboard</button>
+      <button class="tab-btn" id="performer-tab-btn" data-tab="performer-tab">🏆 Performers</button>
       <button class="tab-btn" id="import-tab-btn" data-tab="import-tab" hidden>Import data</button>
     </nav>
 
     <main>
       <section id="search-tab" class="tab-panel voters-card">
         <div class="search-row">
-          <input type="search" id="voter-search" placeholder="Name, house number, or Voter ID">
+          <input type="search" id="voter-search" placeholder="Name, house number, Voter ID or mobile">
           <select id="ward-filter"><option value="">All wards</option></select>
           <select id="locality-filter"><option value="">All localities</option></select>
         </div>
@@ -82,6 +83,10 @@
 
       <section id="dashboard-tab" class="tab-panel" hidden>
         <div id="dash-root"></div>
+      </section>
+
+      <section id="performer-tab" class="tab-panel" hidden>
+        <div id="perf-root"></div>
       </section>
 
       <section id="import-tab" class="tab-panel" hidden>
@@ -119,6 +124,7 @@
   <script src="voters.js"></script>
   <script src="groups.js"></script>
   <script src="dashboard.js"></script>
+  <script src="performer.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
