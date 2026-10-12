@@ -651,3 +651,21 @@ button.ghost { min-height: 40px; padding: 8px 14px; }
 .phone-btn.call { background: var(--indigo); }
 .phone-btn.whatsapp { background: #1F7A44; }
 .last-contact { margin-top: 8px; font-size: 0.82rem; color: #6B6F76; }
+
+/* ---- Performers ---- */
+.perf-star { background: #FFF8E6; border: 1px solid #E8D9B0; border-radius: 4px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.95rem; color: var(--indigo); font-weight: 600; }
+.perf-me { margin: 0 0 12px; font-size: 0.9rem; color: #4A4D53; }
+.perf-row { display: flex; gap: 12px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 12px; margin-bottom: 8px; }
+.perf-row.me { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.perf-rank { width: 40px; text-align: center; font-size: 1.4rem; font-weight: 700; color: var(--indigo); flex-shrink: 0; }
+.perf-body { flex: 1; min-width: 0; }
+.perf-name { font-weight: 600; font-size: 0.95rem; }
+.perf-stats { font-size: 0.78rem; color: #6B6F76; margin-top: 2px; }
+.perf-bar { height: 6px; background: var(--line); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+.perf-bar span { display: block; height: 100%; background: var(--gold); }
+.perf-pts { text-align: right; flex-shrink: 0; font-size: 1.3rem; font-weight: 700; color: var(--indigo); }
+.perf-pts small { display: block; font-size: 0.7rem; font-weight: 500; color: #6B6F76; }
+.perf-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.perf-badge { background: #EEF0F6; color: var(--indigo); font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 12px; }
+.perf-rules { font-size: 0.8rem; color: #6B6F76; line-height: 1.6; margin: 14px 0 6px; white-space: pre-line; }
+#performer-tab .seg { margin-bottom: 14px; }
