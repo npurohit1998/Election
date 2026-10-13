@@ -59,9 +59,23 @@
           <input type="search" id="voter-search" placeholder="Name, house number, Voter ID or mobile">
           <select id="ward-filter"><option value="">All wards</option></select>
           <select id="locality-filter"><option value="">All localities</option></select>
+          <select id="phone-filter"><option value="">नंबर: सभी</option><option value="with">सिर्फ़ नंबर वाले</option><option value="without">बिना नंबर वाले</option></select>
         </div>
+        <div class="list-tools"><button id="select-toggle" class="edit-btn" type="button">☑ कई लोगों को चुनें</button></div>
         <div id="voter-count" class="voter-count"></div>
         <div id="voter-list" class="voter-list"></div>
+        <div id="select-bar" class="select-bar" hidden>
+          <div class="select-info">
+            <span id="select-count">0 चुने गए</span>
+            <button id="select-all" class="dash-link" type="button">सब चुनें</button>
+            <button id="select-clear" class="dash-link" type="button">हटाएँ</button>
+          </div>
+          <div class="select-actions">
+            <select id="select-group"></select>
+            <button id="select-add" class="visit-btn" type="button">जोड़ें</button>
+          </div>
+          <p id="select-msg" class="action-msg"></p>
+        </div>
       </section>
 
       <section id="families-tab" class="tab-panel" hidden>
@@ -107,13 +121,13 @@
   </section>
 
   <template id="voter-row-template">
-    <button class="voter-row">
+    <div class="voter-row" role="button" tabindex="0">
       <img class="voter-thumb" alt="" loading="lazy" decoding="async">
       <div class="voter-row-info">
         <div class="voter-row-name"></div>
         <div class="voter-row-meta"></div>
       </div>
-    </button>
+    </div>
   </template>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
