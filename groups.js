@@ -94,11 +94,24 @@ function renderHousehold(members) {
   const add = h('button', 'visit-btn', 'Add surname to everyone');
   add.type = 'button';
   add.addEventListener('click', () => addSurname(members, msg));
+  const pick = h('select', 'group-pick');
+  pick.append(new Option('Group चुनिए…', ''), ...groups.map((g) => new Option(g.name, g.group_id)));
+  const toGroup = h('button', 'visit-btn', 'सबको group में जोड़ें');
+  toGroup.type = 'button';
+  toGroup.addEventListener('click', async () => {
+    const gid = Number(pick.value);
+    const g = groups.find((x) => x.group_id === gid);
+    if (!g) { msg.textContent = groups.length ? 'पहले group चुनिए।' : 'पहले Groups tab में group बनाइए।'; return; }
+    if (!confirm(`इस घर के ${members.length} voters को "${g.name}" group में जोड़ें?`)) return;
+    toGroup.disabled = true;
+    await window.bulkGroupAdd(gid, members.map((m) => m.voter_id), msg);
+    toGroup.disabled = false;
+  });
   familyDetailEl.replaceChildren(
     back,
     h('h2', 'panel-title', `House ${v.house_number || '—'} · ${members.length} voters`),
     h('p', 'muted', `Ward ${wardNumbers[v.ward_id] || '?'} · ${v.locality || '—'}`),
-    add, msg, listOf(members)
+    pick, toGroup, add, msg, listOf(members)
   );
 }
 
@@ -194,6 +207,53 @@ document.getElementById('new-group-btn').addEventListener('click', async () => {
   if (error) { alert(`Could not create group: ${error.message}`); return; }
   await loadGroups();
 });
+
+// Adds many voters to a group at once (skips existing members). Used by Families and Search "select" mode.
+window.bulkGroupAdd = async (groupId, voterIds, msgEl) => {
+  const g = groups.find((x) => x.group_id === groupId);
+  const have = new Set(memberships.filter((m) => m.group_id === groupId).map((m) => m.voter_id));
+  const ids = [...new Set(voterIds)];
+  const fresh = ids.filter((id) => !have.has(id));
+  const added = [];
+  let failed = '';
+  for (let i = 0; i < fresh.length && !failed; i += 200) {
+    const rows = fresh.slice(i, i + 200).map((id) => ({ group_id: groupId, voter_id: id, added_by: window.appUser.id }));
+    msgEl.textContent = `जोड़ा जा रहा है… ${added.length}/${fresh.length}`;
+    const { error } = await sb.from('group_members').insert(rows);
+    if (!error) { added.push(...rows.map((r) => r.voter_id)); continue; }
+    if (error.code !== '23505') { failed = error.message; break; }
+    for (const r of rows) { // a few were added meanwhile: retry one by one
+      const { error: e1 } = await sb.from('group_members').insert(r);
+      if (!e1) added.push(r.voter_id);
+      else if (e1.code !== '23505') { failed = e1.message; break; }
+    }
+  }
+  added.forEach((id) => memberships.push({ group_id: groupId, voter_id: id }));
+  renderGroups();
+  msgEl.textContent = failed
+    ? `${added.length} जुड़े, फिर रुक गया: ${failed}`
+    : `${added.length} जुड़े, ${ids.length - added.length} पहले से "${g ? g.name : ''}" में थे।`;
+  if (added.length) msgEl.append(undoButton(groupId, added, msgEl));
+  return added;
+};
+
+// Removes only the voters added by the last bulk add (group membership only; voters are untouched).
+function undoButton(groupId, added, msgEl) {
+  const b = h('button', 'back-link', '↩ पलटें');
+  b.type = 'button';
+  b.addEventListener('click', async () => {
+    b.disabled = true;
+    for (let i = 0; i < added.length; i += 50) {
+      const { error } = await sb.from('group_members').delete().eq('group_id', groupId).in('voter_id', added.slice(i, i + 50));
+      if (error) { msgEl.textContent = `पलट नहीं सका: ${error.message}`; return; }
+    }
+    const gone = new Set(added);
+    memberships = memberships.filter((m) => !(m.group_id === groupId && gone.has(m.voter_id)));
+    renderGroups();
+    msgEl.textContent = 'पलट दिया ✓';
+  });
+  return b;
+}
 
 // Shown inside each voter's page (called from voters.js).
 window.groupSection = (voter) => {
