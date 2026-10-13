@@ -191,10 +191,18 @@ function renderGroupPage(g) {
     await loadGroups();
   });
 
+  let printBtn = null;
+  if (members.length && window.appUser && window.appUser.isAdmin) { // admin only (list can contain phone numbers)
+    printBtn = h('button', 'visit-btn', '📄 PDF / Print');
+    printBtn.type = 'button';
+    printBtn.addEventListener('click', () => printGroup(g, members));
+  }
+
   groupDetailEl.replaceChildren(
     back,
     h('h2', 'panel-title', g.name),
     h('p', 'muted', `${members.length} voters. To add someone, open their page and use "Groups".`),
+    ...(printBtn ? [printBtn, h('div', 'dash-gap')] : []),
     members.length ? listOf(members) : h('p', 'list-hint', 'No voters in this group yet.'),
     del
   );
@@ -253,6 +261,46 @@ function undoButton(groupId, added, msgEl) {
     msgEl.textContent = 'पलट दिया ✓';
   });
   return b;
+}
+
+// Admin-only: clean A4 list of a group -> browser "Print / Save as PDF" (Hindi prints correctly this way).
+function printGroup(g, members) {
+  const withPhone = confirm('PDF में मोबाइल नंबर शामिल करें?\n\nOK = हाँ, Cancel = नहीं');
+  const list = members.filter((v) => v.is_active).sort((a, b) =>
+    (wardNumbers[a.ward_id] - wardNumbers[b.ward_id]) ||
+    String(a.locality || '').localeCompare(String(b.locality || '')) ||
+    String(a.house_number || '').localeCompare(String(b.house_number || ''), undefined, { numeric: true }));
+
+  const old = document.getElementById('print-area');
+  if (old) old.remove();
+  const area = h('div');
+  area.id = 'print-area';
+  const date = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  area.append(
+    h('h1', null, `${g.name} — ${list.length} voters`),
+    h('p', 'print-note', `${date} · सिर्फ़ चुनाव कार्य हेतु — गोपनीय, आगे साझा न करें`));
+
+  const head = h('tr');
+  ['क्रम', 'नाम', 'पिता / पति', 'मकान', 'Locality', 'Ward', ...(withPhone ? ['मोबाइल'] : []), 'नोट']
+    .forEach((t) => head.append(h('th', null, t)));
+  const thead = h('thead');
+  thead.append(head);
+  const tbody = h('tbody');
+  list.forEach((v, i) => {
+    const tr = h('tr');
+    [i + 1, v.name || '', v.relation_name || '', v.house_number || '', v.locality || '', wardNumbers[v.ward_id] || '',
+      ...(withPhone ? [normPhone(v.phone) || '—'] : []), '']
+      .forEach((t) => tr.append(h('td', null, t)));
+    tbody.append(tr);
+  });
+  const table = h('table');
+  table.append(thead, tbody);
+  area.append(table);
+  document.body.append(area);
+
+  const done = () => { area.remove(); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
 }
 
 // Shown inside each voter's page (called from voters.js).
