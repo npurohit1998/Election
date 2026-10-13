@@ -112,7 +112,7 @@
   function statTable(firstHead, rows) {
     const tb = h('table', 'dash-table');
     const head = h('tr');
-    [firstHead, 'कुल', 'Strong', 'Leaning', 'Opp.'].forEach((x) => head.append(h('th', null, x)));
+    [firstHead, 'कुल', 'Strong', 'Leaning', 'Opp.', '📞'].forEach((x) => head.append(h('th', null, x)));
     tb.append(head);
     rows.forEach((r) => {
       const t = tally(r.voters);
@@ -130,6 +130,14 @@
         td.append(b);
         tr.append(td);
       });
+      const hasNum = () => r.voters.filter((v) => v.is_active && normPhone(v.phone));
+      const ntd = h('td');
+      const nb = h('button', 'dash-num', hasNum().length);
+      nb.type = 'button';
+      nb.disabled = !hasNum().length;
+      nb.addEventListener('click', () => openList(`${r.title} — नंबर वाले`, hasNum));
+      ntd.append(nb);
+      tr.append(ntd);
       tb.append(tr);
     });
     return tb;
