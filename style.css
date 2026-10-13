@@ -669,3 +669,22 @@ button.ghost { min-height: 40px; padding: 8px 14px; }
 .perf-badge { background: #EEF0F6; color: var(--indigo); font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 12px; }
 .perf-rules { font-size: 0.8rem; color: #6B6F76; line-height: 1.6; margin: 14px 0 6px; white-space: pre-line; }
 #performer-tab .seg { margin-bottom: 14px; }
+
+/* ---- Search: row actions, multi-select, group pick ---- */
+.voter-row-info { flex: 1; min-width: 0; }
+.list-tools { margin-bottom: 10px; }
+.list-tools .edit-btn { margin-bottom: 0; }
+.row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.row-actions .phone-btn { flex: 0 0 auto; min-width: 46px; min-height: 46px; padding: 0 8px; font-size: 1.25rem; }
+.row-check { width: 26px; height: 26px; flex-shrink: 0; border: 2px solid var(--line); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; background: #fff; }
+.row-check.on { background: var(--indigo); border-color: var(--indigo); }
+.select-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: #fff; border-top: 1px solid var(--line); box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08); padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); }
+.select-info { display: flex; align-items: center; gap: 14px; font-size: 0.9rem; font-weight: 600; color: var(--indigo); }
+.select-actions { display: flex; gap: 8px; margin-top: 6px; }
+.select-actions select { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); }
+.select-actions .visit-btn { width: auto; flex: 0 0 auto; padding: 0 22px; }
+.select-bar .action-msg { margin: 6px 0 0; }
+#search-tab.selecting { padding-bottom: 180px; }
+.group-pick { width: 100%; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); }
+.dash-table th, .dash-table td { padding-left: 3px; padding-right: 3px; }
+.dash-num { min-width: 36px; }
