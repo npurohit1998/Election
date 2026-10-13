@@ -75,17 +75,7 @@ function phoneBlock(v, onLogged) {
     return box;
   }
   const msg = h('p', 'action-msg');
-  const row = h('div', 'phone-actions');
-  [['call', '📞 Call', `tel:+91${num}`], ['whatsapp', '💬 WhatsApp', `https://wa.me/91${num}?text=${encodeURIComponent(WA_MESSAGE)}`]].forEach(([type, label, href]) => {
-    const a = h('a', `phone-btn ${type}`, label);
-    a.href = href;
-    if (type === 'whatsapp') { a.target = '_blank'; a.rel = 'noopener'; }
-    a.addEventListener('click', async () => { // link still opens; logging runs alongside
-      const { error } = await sb.rpc('voter_contact', { p_voter: v.voter_id, p_channel: type });
-      if (error) msg.textContent = `Log नहीं हुआ: ${error.message}`; else onLogged();
-    });
-    row.append(a);
-  });
+  const row = contactLinks(v, num, { cls: 'phone-actions', onLogged, onError: (m) => { msg.textContent = m; } });
   box.append(h('div', 'phone-num', num), row, msg, h('div', 'last-contact'));
   return box;
 }
@@ -155,25 +145,100 @@ function matchesSearch(voter, query) {
   );
 }
 
+// ---------- Multi-select: add many voters to a group ----------
+const $id = (id) => document.getElementById(id);
+const MAX_SELECT = 500;
+const MAX_ROWS = 400;
+let selectMode = false;
+let selected = new Set();
+let lastFiltered = [];
+
+function updateSelectBar() {
+  const c = $id('select-count');
+  if (c) c.textContent = `${selected.size} चुने गए`;
+}
+
+function fillSelectGroups() {
+  const sel = $id('select-group');
+  if (!sel) return;
+  sel.replaceChildren(
+    new Option(groups.length ? 'Group चुनिए…' : 'पहले Groups tab में group बनाइए', ''),
+    ...groups.map((g) => new Option(g.name, g.group_id)));
+}
+
+function setSelectMode(on) {
+  selectMode = on;
+  if (!on) selected = new Set();
+  const bar = $id('select-bar');
+  const tog = $id('select-toggle');
+  if (bar) bar.hidden = !on;
+  if (tog) tog.textContent = on ? '✕ चुनना बंद करें' : '☑ कई लोगों को चुनें';
+  $id('search-tab').classList.toggle('selecting', on);
+  const m = $id('select-msg');
+  if (m && !on) m.textContent = '';
+  fillSelectGroups();
+  updateSelectBar();
+  renderList();
+}
+
+function toggleSelect(id, row) {
+  if (selected.has(id)) selected.delete(id);
+  else if (selected.size >= MAX_SELECT) {
+    const m = $id('select-msg');
+    if (m) m.textContent = `एक बार में अधिकतम ${MAX_SELECT} चुन सकते हैं।`;
+    return;
+  } else selected.add(id);
+  const on = selected.has(id);
+  const chk = row.querySelector('.row-check');
+  if (chk) { chk.classList.toggle('on', on); chk.textContent = on ? '✓' : ''; }
+  updateSelectBar();
+}
+
+// 📞 / 💬 links. Every tap is logged (who + when) so everyone can see it in History.
+function contactLinks(v, num, { cls, short, onLogged, onError }) {
+  const wrap = h('div', cls);
+  [['call', '📞', 'Call', `tel:+91${num}`],
+   ['whatsapp', '💬', 'WhatsApp', `https://wa.me/91${num}?text=${encodeURIComponent(WA_MESSAGE)}`]
+  ].forEach(([type, icon, name, href]) => {
+    const a = h('a', `phone-btn ${type}`, short ? icon : `${icon} ${name}`);
+    a.href = href;
+    a.setAttribute('aria-label', name);
+    if (type === 'whatsapp') { a.target = '_blank'; a.rel = 'noopener'; }
+    a.addEventListener('click', async (e) => {
+      e.stopPropagation(); // don't open the voter page
+      const { error } = await sb.rpc('voter_contact', { p_voter: v.voter_id, p_channel: type });
+      if (error) onError(`Log नहीं हुआ: ${error.message}`);
+      else if (onLogged) onLogged();
+    });
+    wrap.append(a);
+  });
+  return wrap;
+}
+
 function renderList() {
   const query = searchInput.value.trim();
   const locality = localityFilter.value;
   const ward = wardFilter.value;
-  const searching = query || locality || ward;
+  const pf = ($id('phone-filter') || {}).value || ''; // '', 'with', 'without'
+  const searching = query || locality || ward || pf;
 
   const filtered = allVoters.filter((v) =>
     v.is_active && matchesSearch(v, query) && (!locality || v.locality === locality) &&
-    (!ward || String(v.ward_id) === ward)
+    (!ward || String(v.ward_id) === ward) &&
+    (!pf || (pf === 'with') === !!normPhone(v.phone))
   );
+  lastFiltered = filtered;
+  const withNum = filtered.filter((v) => normPhone(v.phone)).length;
 
   voterCountEl.textContent = searching
-    ? `${filtered.length} match${filtered.length === 1 ? '' : 'es'}`
-    : `${filtered.length} active voters`;
+    ? `${filtered.length} मिले · ${withNum} के पास नंबर`
+    : `${filtered.length} active voters · ${withNum} के पास नंबर`;
 
   voterListEl.replaceChildren();
 
-  for (const voter of searching ? filtered : filtered.slice(0, 30)) {
+  for (const voter of searching ? filtered.slice(0, MAX_ROWS) : filtered.slice(0, 30)) {
     const node = rowTemplate.content.cloneNode(true);
+    const row = node.querySelector('.voter-row');
     const img = node.querySelector('.voter-thumb');
     if (voter.photo_url) img.src = photoSrc(voter);
     else img.classList.add('no-photo');
@@ -183,13 +248,30 @@ function renderList() {
     node.querySelector('.voter-row-meta').textContent =
       `Ward ${wardNumbers[voter.ward_id] || '?'} · House ${voter.house_number || '—'} · ${voter.age || '?'} yrs · ${GENDER_LABEL[voter.gender] || voter.gender || '—'}` +
       (voter.voted ? ' · ✓ Voted' : '');
-    node.querySelector('.voter-row').addEventListener('click', () => showDetail(voter));
+
+    if (selectMode) {
+      const on = selected.has(voter.voter_id);
+      row.prepend(h('span', `row-check${on ? ' on' : ''}`, on ? '✓' : ''));
+    }
+    row.addEventListener('click', () => {
+      if (selectMode) toggleSelect(voter.voter_id, row);
+      else showDetail(voter);
+    });
+    const num = normPhone(voter.phone);
+    if (num && !selectMode) {
+      row.append(contactLinks(voter, num, { cls: 'row-actions', short: true, onError: (m) => alert(m) }));
+    }
     voterListEl.appendChild(node);
   }
 
+  if (!filtered.length) voterListEl.appendChild(h('p', 'list-hint', 'कोई voter नहीं मिला।'));
   if (!searching && filtered.length > 30) {
     voterListEl.appendChild(h('p', 'list-hint',
       `Showing 30 of ${filtered.length} — search or use the filters to narrow this down.`));
+  }
+  if (searching && filtered.length > MAX_ROWS) {
+    voterListEl.appendChild(h('p', 'list-hint',
+      `पहले ${MAX_ROWS} दिखाए गए (कुल ${filtered.length}) — filter और कसिए।`));
   }
 }
 
@@ -413,10 +495,41 @@ window.addEventListener('popstate', closeDetail);
 searchInput.addEventListener('input', debounce(renderList, 150));
 wardFilter.addEventListener('change', () => { populateLocalities(); renderList(); });
 localityFilter.addEventListener('change', renderList);
+if ($id('phone-filter')) $id('phone-filter').addEventListener('change', renderList);
+if ($id('select-toggle')) {
+  $id('select-toggle').addEventListener('click', () => setSelectMode(!selectMode));
+  $id('select-all').addEventListener('click', () => {
+    selected = new Set(lastFiltered.slice(0, MAX_SELECT).map((v) => v.voter_id));
+    $id('select-msg').textContent = lastFiltered.length > MAX_SELECT
+      ? `पहले ${MAX_SELECT} चुने गए — filter कसकर बाकी चुनिए।` : '';
+    updateSelectBar();
+    renderList();
+  });
+  $id('select-clear').addEventListener('click', () => { selected = new Set(); updateSelectBar(); renderList(); });
+  $id('select-add').addEventListener('click', async () => {
+    const msg = $id('select-msg');
+    const gid = Number($id('select-group').value);
+    const g = groups.find((x) => x.group_id === gid);
+    if (!g) { msg.textContent = groups.length ? 'पहले group चुनिए।' : 'पहले Groups tab में group बनाइए।'; return; }
+    if (!selected.size) { msg.textContent = 'पहले कुछ voters चुनिए।'; return; }
+    if (!window.bulkGroupAdd) { msg.textContent = 'groups.js अपडेट नहीं हुई — सभी files साथ में बदलिए।'; return; }
+    if (!confirm(`${selected.size} voters को "${g.name}" group में जोड़ें?`)) return;
+    const btn = $id('select-add');
+    btn.disabled = true;
+    await window.bulkGroupAdd(gid, [...selected], msg);
+    btn.disabled = false;
+    selected = new Set();
+    updateSelectBar();
+    renderList();
+  });
+}
 document.addEventListener('voters-changed', loadVoters);
 
 document.addEventListener('user-ready', loadVoters);
 document.addEventListener('user-gone', () => {
+  selectMode = false;
+  selected = new Set();
+  if ($id('select-bar')) $id('select-bar').hidden = true;
   allVoters = [];
   wardFilter.value = '';
   currentVoter = null;
