@@ -195,7 +195,7 @@ function renderGroupPage(g) {
   if (members.length) { // open to all volunteers
     printBtn = h('button', 'visit-btn', '📄 PDF / Print');
     printBtn.type = 'button';
-    printBtn.addEventListener('click', () => printGroup(g, members));
+    printBtn.addEventListener('click', () => printGroup(g, members, printBtn));
   }
 
   groupDetailEl.replaceChildren(
@@ -263,44 +263,74 @@ function undoButton(groupId, added, msgEl) {
   return b;
 }
 
-// Clean A4 list of a group -> browser "Print / Save as PDF" (Hindi prints correctly this way).
-function printGroup(g, members) {
+// Clean A4 list of a group (with photos) -> browser "Print / Save as PDF" (Hindi prints correctly this way).
+async function printGroup(g, members, btn) {
   const withPhone = confirm('PDF में मोबाइल नंबर शामिल करें?\n\nOK = हाँ, Cancel = नहीं');
   const list = members.filter((v) => v.is_active).sort((a, b) =>
     (wardNumbers[a.ward_id] - wardNumbers[b.ward_id]) ||
     String(a.locality || '').localeCompare(String(b.locality || '')) ||
     String(a.house_number || '').localeCompare(String(b.house_number || ''), undefined, { numeric: true }));
+  const withPhoto = list.length <= 150 ||
+    confirm(`इस group में ${list.length} voters हैं। फ़ोटो के साथ PDF बनने में समय और इंटरनेट लगेगा।\n\nOK = फ़ोटो के साथ, Cancel = बिना फ़ोटो`);
 
-  const old = document.getElementById('print-area');
-  if (old) old.remove();
-  const area = h('div');
-  area.id = 'print-area';
-  const date = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-  area.append(
-    h('h1', null, `${g.name} — ${list.length} voters`),
-    h('p', 'print-note', `${date} · सिर्फ़ चुनाव कार्य हेतु — गोपनीय, आगे साझा न करें`));
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'तैयार हो रही है…'; }
+  try {
+    const old = document.getElementById('print-area');
+    if (old) old.remove();
+    const area = h('div');
+    area.id = 'print-area';
+    const date = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    area.append(
+      h('h1', null, `${g.name} — ${list.length} voters`),
+      h('p', 'print-note', `${date} · सिर्फ़ चुनाव कार्य हेतु — गोपनीय, आगे साझा न करें`));
 
-  const head = h('tr');
-  ['क्रम', 'नाम', 'पिता / पति', 'मकान', 'Locality', 'Ward', ...(withPhone ? ['मोबाइल'] : []), 'नोट']
-    .forEach((t) => head.append(h('th', null, t)));
-  const thead = h('thead');
-  thead.append(head);
-  const tbody = h('tbody');
-  list.forEach((v, i) => {
-    const tr = h('tr');
-    [i + 1, v.name || '', v.relation_name || '', v.house_number || '', v.locality || '', wardNumbers[v.ward_id] || '',
-      ...(withPhone ? [normPhone(v.phone) || '—'] : []), '']
-      .forEach((t) => tr.append(h('td', null, t)));
-    tbody.append(tr);
-  });
-  const table = h('table');
-  table.append(thead, tbody);
-  area.append(table);
-  document.body.append(area);
+    const head = h('tr');
+    ['क्रम', ...(withPhoto ? ['फ़ोटो'] : []), 'नाम', 'पिता / पति', 'मकान', 'Locality', 'Ward', ...(withPhone ? ['मोबाइल'] : []), 'नोट']
+      .forEach((t) => head.append(h('th', null, t)));
+    const thead = h('thead');
+    thead.append(head);
 
-  const done = () => { area.remove(); window.removeEventListener('afterprint', done); };
-  window.addEventListener('afterprint', done);
-  window.print();
+    const imgs = [];
+    const tbody = h('tbody');
+    list.forEach((v, i) => {
+      const tr = h('tr');
+      tr.append(h('td', null, i + 1));
+      if (withPhoto) {
+        const td = h('td', 'print-photo-cell');
+        if (v.photo_url) {
+          const im = h('img', 'print-photo');
+          im.alt = '';
+          im.src = photoSrc(v);
+          imgs.push(im);
+          td.append(im);
+        }
+        tr.append(td);
+      }
+      [v.name || '', v.relation_name || '', v.house_number || '', v.locality || '', wardNumbers[v.ward_id] || '',
+        ...(withPhone ? [normPhone(v.phone) || '—'] : []), '']
+        .forEach((t) => tr.append(h('td', null, t)));
+      tbody.append(tr);
+    });
+    const table = h('table');
+    table.append(thead, tbody);
+    area.append(table);
+    document.body.append(area);
+
+    // wait for the photos (max 8 s) so they are really in the PDF
+    let timer;
+    await Promise.race([
+      Promise.all(imgs.map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; })))),
+      new Promise((r) => { timer = setTimeout(r, 8000); }),
+    ]);
+    clearTimeout(timer);
+
+    const done = () => { area.remove(); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+  }
 }
 
 // Shown inside each voter's page (called from voters.js).
