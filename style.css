@@ -705,3 +705,6 @@ button.ghost { min-height: 40px; padding: 8px 14px; }
   #print-area tr { page-break-inside: avoid; }
   #print-area td:last-child { width: 22%; }
 }
+
+#print-area .print-photo-cell { width: 44px; padding: 2px; }
+#print-area .print-photo { display: block; width: 40px; height: 48px; object-fit: cover; }
