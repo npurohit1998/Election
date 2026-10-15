@@ -192,7 +192,7 @@ function renderGroupPage(g) {
   });
 
   let printBtn = null;
-  if (members.length && window.appUser && window.appUser.isAdmin) { // admin only (list can contain phone numbers)
+  if (members.length) { // open to all volunteers
     printBtn = h('button', 'visit-btn', '📄 PDF / Print');
     printBtn.type = 'button';
     printBtn.addEventListener('click', () => printGroup(g, members));
@@ -263,7 +263,7 @@ function undoButton(groupId, added, msgEl) {
   return b;
 }
 
-// Admin-only: clean A4 list of a group -> browser "Print / Save as PDF" (Hindi prints correctly this way).
+// Clean A4 list of a group -> browser "Print / Save as PDF" (Hindi prints correctly this way).
 function printGroup(g, members) {
   const withPhone = confirm('PDF में मोबाइल नंबर शामिल करें?\n\nOK = हाँ, Cancel = नहीं');
   const list = members.filter((v) => v.is_active).sort((a, b) =>
