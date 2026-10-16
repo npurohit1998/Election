@@ -148,7 +148,19 @@ function matchesSearch(voter, query) {
 // ---------- Multi-select: add many voters to a group ----------
 const $id = (id) => document.getElementById(id);
 const MAX_SELECT = 500;
-const MAX_ROWS = 400;
+const PAGE_SIZE = 50; // एक बार में इतने voters दिखते हैं; "और दिखाएँ" दबाने पर इतने और जुड़ते हैं
+let shownLimit = PAGE_SIZE;
+function resetPaging() { shownLimit = PAGE_SIZE; }
+
+// Voters को ward -> serial number (संख्या के हिसाब से: 2, 10, 100) के क्रम में लगाता है.
+// यह सिर्फ़ दिखाने का क्रम बदलता है, डेटा में कोई बदलाव नहीं करता.
+const numOr = (x) => { const n = parseFloat(x); return Number.isFinite(n) ? n : Infinity; };
+const cmp = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+function bySerial(a, b) {
+  return cmp(numOr(wardNumbers[a.ward_id]), numOr(wardNumbers[b.ward_id]))
+    || cmp(numOr(a.serial_number), numOr(b.serial_number))
+    || cmp(a.voter_id, b.voter_id);
+}
 let selectMode = false;
 let selected = new Set();
 let lastFiltered = [];
@@ -226,7 +238,7 @@ function renderList() {
     v.is_active && matchesSearch(v, query) && (!locality || v.locality === locality) &&
     (!ward || String(v.ward_id) === ward) &&
     (!pf || (pf === 'with') === !!normPhone(v.phone))
-  );
+  ).sort(bySerial); // filter() नई list देता है, इसलिए allVoters का क्रम/डेटा जैसा था वैसा ही रहता है
   lastFiltered = filtered;
   const withNum = filtered.filter((v) => normPhone(v.phone)).length;
 
@@ -236,7 +248,8 @@ function renderList() {
 
   voterListEl.replaceChildren();
 
-  for (const voter of searching ? filtered.slice(0, MAX_ROWS) : filtered.slice(0, 30)) {
+  const shown = filtered.slice(0, shownLimit);
+  for (const voter of shown) {
     const node = rowTemplate.content.cloneNode(true);
     const row = node.querySelector('.voter-row');
     const img = node.querySelector('.voter-thumb');
@@ -264,14 +277,16 @@ function renderList() {
     voterListEl.appendChild(node);
   }
 
-  if (!filtered.length) voterListEl.appendChild(h('p', 'list-hint', 'कोई voter नहीं मिला।'));
-  if (!searching && filtered.length > 30) {
-    voterListEl.appendChild(h('p', 'list-hint',
-      `Showing 30 of ${filtered.length} — search or use the filters to narrow this down.`));
-  }
-  if (searching && filtered.length > MAX_ROWS) {
-    voterListEl.appendChild(h('p', 'list-hint',
-      `पहले ${MAX_ROWS} दिखाए गए (कुल ${filtered.length}) — filter और कसिए।`));
+  if (!filtered.length) {
+    voterListEl.appendChild(h('p', 'list-hint', 'कोई voter नहीं मिला।'));
+  } else {
+    voterListEl.appendChild(h('p', 'list-hint', `${shown.length} / ${filtered.length} दिखाए गए (serial number के क्रम में)`));
+    if (filtered.length > shown.length) {
+      const more = h('button', 'visit-btn', `और दिखाएँ (${Math.min(PAGE_SIZE, filtered.length - shown.length)} और)`);
+      more.type = 'button';
+      more.addEventListener('click', () => { shownLimit += PAGE_SIZE; renderList(); });
+      voterListEl.appendChild(more);
+    }
   }
 }
 
@@ -492,10 +507,10 @@ function closeDetail() {
 backBtn.addEventListener('click', () => history.back());
 window.addEventListener('popstate', closeDetail);
 
-searchInput.addEventListener('input', debounce(renderList, 150));
-wardFilter.addEventListener('change', () => { populateLocalities(); renderList(); });
-localityFilter.addEventListener('change', renderList);
-if ($id('phone-filter')) $id('phone-filter').addEventListener('change', renderList);
+searchInput.addEventListener('input', debounce(() => { resetPaging(); renderList(); }, 150));
+wardFilter.addEventListener('change', () => { populateLocalities(); resetPaging(); renderList(); });
+localityFilter.addEventListener('change', () => { resetPaging(); renderList(); });
+if ($id('phone-filter')) $id('phone-filter').addEventListener('change', () => { resetPaging(); renderList(); });
 if ($id('select-toggle')) {
   $id('select-toggle').addEventListener('click', () => setSelectMode(!selectMode));
   $id('select-all').addEventListener('click', () => {
@@ -531,6 +546,7 @@ document.addEventListener('user-gone', () => {
   selected = new Set();
   if ($id('select-bar')) $id('select-bar').hidden = true;
   allVoters = [];
+  resetPaging();
   wardFilter.value = '';
   currentVoter = null;
   voterListEl.replaceChildren();
