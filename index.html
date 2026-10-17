@@ -50,6 +50,7 @@
       <button class="tab-btn" data-tab="groups-tab">Groups</button>
       <button class="tab-btn" id="dashboard-tab-btn" data-tab="dashboard-tab" hidden>Dashboard</button>
       <button class="tab-btn" id="performer-tab-btn" data-tab="performer-tab">🏆 Performers</button>
+      <button class="tab-btn" id="invite-tab-btn" data-tab="invite-tab">📨 निमंत्रण</button>
       <button class="tab-btn" id="import-tab-btn" data-tab="import-tab" hidden>Import data</button>
     </nav>
 
@@ -103,6 +104,10 @@
         <div id="perf-root"></div>
       </section>
 
+      <section id="invite-tab" class="tab-panel" hidden>
+        <div id="invite-root"></div>
+      </section>
+
       <section id="import-tab" class="tab-panel" hidden>
         <p class="lede">Upload each ward's Excel file (with photos). Re-importing a ward updates its voters — nothing is duplicated, and support levels, visits and voted marks are kept.</p>
         <div id="ward-import-list"></div>
@@ -139,6 +144,8 @@
   <script src="groups.js"></script>
   <script src="dashboard.js"></script>
   <script src="performer.js"></script>
+  <script src="presence.js"></script>
+  <script src="invite.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
