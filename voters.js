@@ -366,6 +366,7 @@ function renderDetail() {
   card.append(note, visitBtn, h('p', 'action-msg'));
 
   if (window.groupSection) card.append(window.groupSection(v));
+  if (window.meetingSection) card.append(window.meetingSection(v));
 
   // History
   card.append(h('div', 'section-label', 'History'));
