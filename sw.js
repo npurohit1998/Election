@@ -1,7 +1,7 @@
 // Network first: online users always get the latest code from GitHub/Netlify.
 // The cache is only a fallback when there's no signal.
-const CACHE_NAME = 'lordiya-tracker-v5';
-const APP_SHELL = ['./', './index.html', './style.css', './app.js', './import.js', './voters.js', './groups.js', './dashboard.js', './forum.js', './meetings.js', './devices.js', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'lordiya-tracker-v6';
+const APP_SHELL = ['./', './index.html', './style.css', './app.js', './import.js', './voters.js', './groups.js', './dashboard.js', './forum.js', './meetings.js', './meet-report.js', './devices.js', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
