@@ -82,4 +82,8 @@ loginForm.addEventListener('submit', async (event) => {
   loginStatus.textContent = error ? error.message : '';
 });
 
-signoutBtn.addEventListener('click', () => sb.auth.signOut());
+signoutBtn.addEventListener('click', async () => {
+  // devices.js इसे भरता है: session खत्म होने से पहले इस device को "sign out" चिह्नित करता है
+  if (window.onBeforeSignOut) { try { await window.onBeforeSignOut(); } catch (e) { /* ignore */ } }
+  sb.auth.signOut();
+});
