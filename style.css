@@ -708,3 +708,44 @@ button.ghost { min-height: 40px; padding: 8px 14px; }
 
 #print-area .print-photo-cell { width: 44px; padding: 2px; }
 #print-area .print-photo { display: block; width: 40px; height: 48px; object-fit: cover; }
+/* ---- 🤝 मुलाकात ---- */
+.meet-card { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 14px; margin-bottom: 12px; }
+.meet-big { font-size: 1.6rem; font-weight: 700; color: var(--indigo); }
+.meet-sub { font-size: 0.85rem; color: #4A4D53; margin-top: 4px; line-height: 1.5; }
+.meet-bar { height: 8px; background: var(--line); border-radius: 4px; margin: 10px 0 6px; overflow: hidden; }
+.meet-bar span { display: block; height: 100%; background: var(--gold); }
+.meet-status { color: var(--error); font-weight: 600; }
+.meet-status.done { color: #2E7D4F; }
+.meet-btn { flex: 0 0 auto; min-width: 78px; min-height: 46px; padding: 0 12px; background: var(--indigo); color: #fff; font-size: 0.9rem; }
+.meet-undo { flex: 0 0 auto; min-width: 46px; min-height: 46px; padding: 0 8px; background: none; border: 1px solid var(--line); color: #6B6F76; font-size: 1.2rem; }
+.meet-seg { margin-bottom: 10px; }
+.meet-seg .seg-btn { flex: 1; }
+#meet-tab .search-row { margin-bottom: 10px; }
+.meet-box { margin-top: 8px; }
+.meet-box .history { margin-bottom: 8px; }
+.meet-box textarea, #forum-tab textarea { width: 100%; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--line); border-radius: 3px; background: #fff; color: var(--ink); font-family: inherit; resize: vertical; }
+
+/* ---- 💬 फ़ोरम ---- */
+.forum-post { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 12px; margin-bottom: 10px; }
+.forum-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.forum-name { font-weight: 600; font-size: 0.92rem; color: var(--indigo); }
+.forum-msg.mine > .forum-head .forum-name { color: var(--gold); }
+.forum-when { font-size: 0.75rem; color: #6B6F76; flex-shrink: 0; }
+.forum-body { margin-top: 4px; font-size: 0.95rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.forum-del { background: none; color: #9AA0AB; font-size: 0.78rem; padding: 6px 0; min-height: 36px; }
+.forum-replies { margin: 8px 0 4px; padding-left: 12px; border-left: 3px solid var(--line); }
+.forum-msg.reply { padding: 6px 0; }
+.forum-reply-box { margin-top: 8px; }
+
+/* ---- 📱 Devices (admin) ---- */
+.dev-summary { background: #FFF8E6; border: 1px solid #E8D9B0; border-radius: 4px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.92rem; font-weight: 600; color: var(--indigo); }
+.dev-card { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 12px; margin-bottom: 10px; }
+.dev-card.multi { border-color: var(--error); box-shadow: 0 0 0 1px var(--error); }
+.dev-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.dev-name { font-weight: 600; color: var(--indigo); }
+.dev-count { font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 12px; background: #EEF0F6; color: var(--indigo); flex-shrink: 0; }
+.dev-count.warn { background: #FBE9E7; color: var(--error); }
+.dev-row { padding: 8px 0; border-top: 1px solid var(--line); }
+.dev-row.off { opacity: 0.6; }
+.dev-label { font-size: 0.9rem; font-weight: 600; overflow-wrap: anywhere; }
+.dev-meta { font-size: 0.78rem; color: #6B6F76; margin-top: 2px; }
