@@ -111,6 +111,7 @@ function renderHousehold(members) {
     back,
     h('h2', 'panel-title', `House ${v.house_number || '—'} · ${members.length} voters`),
     h('p', 'muted', `Ward ${wardNumbers[v.ward_id] || '?'} · ${v.locality || '—'}`),
+    ...(window.meetGroupBlock ? [window.meetGroupBlock(members, 'family')] : []),
     pick, toGroup, add, msg, listOf(members)
   );
 }
@@ -203,6 +204,7 @@ function renderGroupPage(g) {
     h('h2', 'panel-title', g.name),
     h('p', 'muted', `${members.length} voters. To add someone, open their page and use "Groups".`),
     ...(printBtn ? [printBtn, h('div', 'dash-gap')] : []),
+    ...(window.meetGroupBlock ? [window.meetGroupBlock(members, 'group'), h('div', 'dash-gap')] : []),
     members.length ? listOf(members) : h('p', 'list-hint', 'No voters in this group yet.'),
     del
   );
