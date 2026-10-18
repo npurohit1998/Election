@@ -749,3 +749,42 @@ button.ghost { min-height: 40px; padding: 8px 14px; }
 .dev-row.off { opacity: 0.6; }
 .dev-label { font-size: 0.9rem; font-weight: 600; overflow-wrap: anywhere; }
 .dev-meta { font-size: 0.78rem; color: #6B6F76; margin-top: 2px; }
+
+/* ---- 🤝 मुलाकात v2: नतीजे, bulk, परिवार/group, PDF panel ---- */
+.meet-status.tried { color: #A86B00; }
+.meet-seg { flex-wrap: wrap; }
+.meet-gsum { font-weight: 600; color: var(--indigo); margin-bottom: 8px; }
+.meet-pick { margin-top: 10px; border: 1px solid var(--line); border-radius: 4px; background: #fff; padding: 4px 12px 12px; }
+.meet-pick-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); min-height: 48px; cursor: pointer; }
+.meet-pick-row input { width: 22px; height: 22px; flex-shrink: 0; }
+.meet-pick-row.done { opacity: 0.55; }
+.meet-pick-info { display: flex; flex-direction: column; min-width: 0; }
+.meet-pick-name { font-weight: 600; }
+.meet-pick-meta { font-size: 0.78rem; color: #6B6F76; }
+.meet-pick .visit-btn { margin-top: 10px; }
+.meet-pick select, .meet-pick input[type=text], .meet-box select.meet-outcome,
+.select-bar input[type=text], .rep-panel select, .rep-panel input[type=text] {
+  width: 100%; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 3px; background: #fff; font: inherit;
+}
+.meet-box select.meet-outcome { margin-bottom: 8px; }
+.meet-house { display: block; font-size: 0.9rem; margin: 6px 0; }
+.meet-del { background: none; color: #9AA0AB; font-size: 0.78rem; padding: 6px 0; min-height: 36px; }
+#meet-tab.selecting { padding-bottom: 240px; }
+.rep-panel { border: 1px solid var(--line); border-radius: 4px; background: #fff; padding: 12px; margin-top: 8px; }
+.rep-panel .edit-field { display: block; margin-bottom: 10px; font-size: 0.85rem; color: #4A4D53; }
+.rep-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.rep-chip { display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); font-size: 0.9rem; }
+.rep-check { display: block; margin: 8px 0; font-size: 0.92rem; }
+
+@media print {
+  #print-area .rep-section ~ .rep-section { break-before: page; page-break-before: always; }
+  #print-area .rep-ward { font-size: 14px; margin: 10px 0 6px; }
+  #print-area .rep-loc td, #print-area .rep-house td { width: auto; }
+  #print-area .rep-loc td { background: #d9d9d9; font-weight: 700; }
+  #print-area .rep-house td { background: #f0f0f0; font-weight: 600; font-size: 10px; }
+  #print-area td { height: 26px; }
+  #print-area td.rep-box { width: 24px; text-align: center; }
+  #print-area .rep-sq { display: inline-block; width: 14px; height: 14px; border: 1.5px solid #000; }
+  #print-area .rep-name { font-weight: 700; }
+  #print-area .rep-rel { font-size: 10px; color: #333; }
+}
