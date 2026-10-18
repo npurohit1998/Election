@@ -49,8 +49,9 @@
       <button class="tab-btn" data-tab="families-tab">Families</button>
       <button class="tab-btn" data-tab="groups-tab">Groups</button>
       <button class="tab-btn" id="dashboard-tab-btn" data-tab="dashboard-tab" hidden>Dashboard</button>
-      <button class="tab-btn" id="performer-tab-btn" data-tab="performer-tab">🏆 Performers</button>
-      <button class="tab-btn" id="invite-tab-btn" data-tab="invite-tab">📨 निमंत्रण</button>
+      <button class="tab-btn" id="meet-tab-btn" data-tab="meet-tab">🤝 मुलाकात</button>
+      <button class="tab-btn" id="forum-tab-btn" data-tab="forum-tab">💬 फ़ोरम</button>
+      <button class="tab-btn" id="devices-tab-btn" data-tab="devices-tab" hidden>📱 Devices</button>
       <button class="tab-btn" id="import-tab-btn" data-tab="import-tab" hidden>Import data</button>
     </nav>
 
@@ -100,12 +101,16 @@
         <div id="dash-root"></div>
       </section>
 
-      <section id="performer-tab" class="tab-panel" hidden>
-        <div id="perf-root"></div>
+      <section id="meet-tab" class="tab-panel" hidden>
+        <div id="meet-root"></div>
       </section>
 
-      <section id="invite-tab" class="tab-panel" hidden>
-        <div id="invite-root"></div>
+      <section id="forum-tab" class="tab-panel" hidden>
+        <div id="forum-root"></div>
+      </section>
+
+      <section id="devices-tab" class="tab-panel" hidden>
+        <div id="devices-root"></div>
       </section>
 
       <section id="import-tab" class="tab-panel" hidden>
@@ -143,9 +148,10 @@
   <script src="voters.js"></script>
   <script src="groups.js"></script>
   <script src="dashboard.js"></script>
-  <script src="performer.js"></script>
+  <script src="forum.js"></script>
+  <script src="meetings.js"></script>
+  <script src="devices.js"></script>
   <script src="presence.js"></script>
-  <script src="invite.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
